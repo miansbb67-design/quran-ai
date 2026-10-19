@@ -145,6 +145,9 @@
                     </div>
                 </div>
 
+                <!-- Pronunciation Corrections & Mistakes Breakdown -->
+                <div id="mistakesContainer" class="mb-4 d-none"></div>
+
                 <!-- Teacher Feedback Advice -->
                 <div class="p-3 rounded-4 bg-emerald-light border border-emerald-border mb-4">
                     <div class="d-flex align-items-center gap-2 mb-1">
@@ -426,15 +429,112 @@
             $('#attemptBadge').text('Attempt #' + data.attempt_number);
             $('#feedbackMessage').text(analysis.feedback_message);
 
-            // Word breakdown
+            // Word breakdown & mistakes collection
             var wordsHtml = '';
+            var mistakes = [];
+
             if (analysis.word_analysis && analysis.word_analysis.length > 0) {
                 analysis.word_analysis.forEach(function(item) {
-                    var cls = item.matched ? 'word-matched' : (item.status === 'uncertain' ? 'word-uncertain' : 'word-missing');
-                    wordsHtml += '<span class="word-feedback ' + cls + '">' + item.word + '</span> ';
+                    var target = item.target_word || item.word || '';
+                    var heard = item.recognized_word || '';
+                    var status = item.status || (item.matched ? 'correct' : 'incorrect');
+
+                    var cls = 'word-matched';
+                    var statusLabel = '<i class="bi bi-check-lg text-success"></i> Correct';
+
+                    if (status === 'uncertain') {
+                        cls = 'word-uncertain';
+                        statusLabel = '<i class="bi bi-exclamation-triangle-fill text-warning"></i> Heard: "' + (heard || '...') + '"';
+                        mistakes.push({
+                            target: target,
+                            heard: heard || '(Unclear pronunciation)',
+                            type: 'Uncertain Pronunciation / Partial Match',
+                            badgeClass: 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
+                            advice: 'Check the makhraj (articulation point) and elongation (Madd).'
+                        });
+                    } else if (status === 'incorrect') {
+                        cls = 'word-missing';
+                        statusLabel = '<i class="bi bi-x-circle-fill text-danger"></i> Heard: "' + (heard || 'Wrong') + '"';
+                        mistakes.push({
+                            target: target,
+                            heard: heard || '(Mispronounced)',
+                            type: 'Mispronounced Word',
+                            badgeClass: 'bg-danger-subtle text-danger border-danger-subtle',
+                            advice: 'Listen closely to the reference Qari audio and repeat this word.'
+                        });
+                    } else if (status === 'missing') {
+                        cls = 'word-missing';
+                        statusLabel = '<i class="bi bi-dash-circle-fill text-danger"></i> Missed / Skipped';
+                        mistakes.push({
+                            target: target,
+                            heard: '(Omitted / Skipped)',
+                            type: 'Missed / Skipped Word',
+                            badgeClass: 'bg-danger-subtle text-danger border-danger-subtle',
+                            advice: 'Make sure not to rush and pronounce each word in full sequence.'
+                        });
+                    } else if (status === 'extra') {
+                        cls = 'word-uncertain';
+                        statusLabel = '<i class="bi bi-plus-circle text-muted"></i> Extra Word';
+                        mistakes.push({
+                            target: '(None)',
+                            heard: heard,
+                            type: 'Extra Spoken Word',
+                            badgeClass: 'bg-secondary-subtle text-secondary border',
+                            advice: 'Avoid reciting additional sounds not present in the verse text.'
+                        });
+                    }
+
+                    wordsHtml += '<div class="word-feedback ' + cls + '">' +
+                        '<span class="arabic-word">' + (target || heard) + '</span>' +
+                        '<span class="heard-status">' + statusLabel + '</span>' +
+                    '</div>';
                 });
+            } else {
+                wordsHtml = '<span class="text-muted small fst-italic d-block text-center py-3">No word breakdown available.</span>';
             }
             $('#wordAlignmentContainer').html(wordsHtml);
+
+            // Render Dedicated Pronunciation Corrections Breakdown
+            if (mistakes.length > 0) {
+                var mistakesHtml = '<div class="card border border-warning border-opacity-50 rounded-4 p-3 bg-white shadow-sm">' +
+                    '<div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">' +
+                        '<h6 class="fw-bold text-dark mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Pronunciation Corrections (' + mistakes.length + ' ' + (mistakes.length === 1 ? 'word needs' : 'words need') + ' practice)</h6>' +
+                    '</div>' +
+                    '<p class="text-secondary small mb-3">Compare the correct Quranic word against what the voice AI detected:</p>' +
+                    '<div class="table-responsive">' +
+                        '<table class="table table-sm table-bordered align-middle mb-0">' +
+                            '<thead class="table-light small text-muted">' +
+                                '<tr>' +
+                                    '<th class="text-end">Correct Quran Word</th>' +
+                                    '<th class="text-end">What You Pronounced</th>' +
+                                    '<th>Status</th>' +
+                                    '<th>Teacher Tip</th>' +
+                                '</tr>' +
+                            '</thead>' +
+                            '<tbody>';
+
+                mistakes.forEach(function(m) {
+                    mistakesHtml += '<tr>' +
+                        '<td class="font-arabic fs-4 text-emerald fw-bold text-end" style="line-height:1.2;">' + m.target + '</td>' +
+                        '<td class="font-arabic fs-5 text-danger text-end" style="line-height:1.2;">' + m.heard + '</td>' +
+                        '<td><span class="badge border ' + m.badgeClass + '">' + m.type + '</span></td>' +
+                        '<td class="small text-secondary">' + m.advice + '</td>' +
+                    '</tr>';
+                });
+
+                mistakesHtml += '</tbody></table></div></div>';
+                $('#mistakesContainer').html(mistakesHtml).removeClass('d-none');
+            } else {
+                $('#mistakesContainer').html(
+                    '<div class="alert alert-success border-0 rounded-4 p-3 shadow-sm d-flex align-items-center gap-2">' +
+                        '<i class="bi bi-check-circle-fill text-success fs-4"></i>' +
+                        '<div>' +
+                            '<strong class="d-block text-dark">Masha\'Allah! Perfect Recitation!</strong>' +
+                            '<small class="text-success">Every word in this verse was pronounced accurately with correct sequencing.</small>' +
+                        '</div>' +
+                    '</div>'
+                ).removeClass('d-none');
+            }
 
             $('#micStatusHeading').text('Recitation Evaluated!');
             $('#micStatusDesc').text('Review your word breakdown above or try again for a higher score.');
@@ -445,6 +545,7 @@
             $('#scoreProgressBar').css('width', '0%');
             $('#resultLabel').text('Awaiting Recitation').removeClass('text-success text-warning text-danger');
             $('#wordAlignmentContainer').html('<span class="text-muted small fst-italic d-block text-center py-3">Recite the verse to view word breakdown</span>');
+            $('#mistakesContainer').html('').addClass('d-none');
             $('#feedbackMessage').text('Press the microphone button and recite the Holy verse clearly. Listen to the reference Qari first if needed.');
             $('#micStatusHeading').text('Click Microphone to Recite');
             $('#micStatusDesc').text('Recite clearly in Arabic. Speak naturally close to your device.');

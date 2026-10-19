@@ -84,18 +84,22 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
 
                 if ($similarity >= 0.85) {
                     $analysis[] = [
+                        'word' => $targetWord,
                         'target_word' => $targetWord,
                         'recognized_word' => $recWord,
                         'status' => 'correct',
+                        'matched' => true,
                         'similarity' => $similarity,
                         'position' => $i + 1,
                     ];
                     $recognizedIndex++;
                 } elseif ($similarity >= 0.5) {
                     $analysis[] = [
+                        'word' => $targetWord,
                         'target_word' => $targetWord,
                         'recognized_word' => $recWord,
                         'status' => 'uncertain',
+                        'matched' => false,
                         'similarity' => $similarity,
                         'position' => $i + 1,
                     ];
@@ -108,17 +112,22 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
                             // Mark skipped words as extra
                             for ($k = $recognizedIndex; $k < $j; $k++) {
                                 $analysis[] = [
+                                    'word' => $recognized[$k],
                                     'target_word' => '',
                                     'recognized_word' => $recognized[$k],
                                     'status' => 'extra',
+                                    'matched' => false,
                                     'similarity' => 0,
                                     'position' => $i + 1,
                                 ];
                             }
+                            $isCorrect = $this->wordSimilarity($recognized[$j], $targetWord) >= 0.85;
                             $analysis[] = [
+                                'word' => $targetWord,
                                 'target_word' => $targetWord,
                                 'recognized_word' => $recognized[$j],
-                                'status' => $this->wordSimilarity($recognized[$j], $targetWord) >= 0.85 ? 'correct' : 'uncertain',
+                                'status' => $isCorrect ? 'correct' : 'uncertain',
+                                'matched' => $isCorrect,
                                 'similarity' => $this->wordSimilarity($recognized[$j], $targetWord),
                                 'position' => $i + 1,
                             ];
@@ -130,9 +139,11 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
 
                     if (!$foundAhead) {
                         $analysis[] = [
+                            'word' => $targetWord,
                             'target_word' => $targetWord,
                             'recognized_word' => $recWord,
                             'status' => 'incorrect',
+                            'matched' => false,
                             'similarity' => $similarity,
                             'position' => $i + 1,
                         ];
@@ -142,9 +153,11 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
             } else {
                 // Word was not recited (missing)
                 $analysis[] = [
+                    'word' => $targetWord,
                     'target_word' => $targetWord,
                     'recognized_word' => '',
                     'status' => 'missing',
+                    'matched' => false,
                     'similarity' => 0,
                     'position' => $i + 1,
                 ];
@@ -154,9 +167,11 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
         // Mark remaining recognized words as extra
         while ($recognizedIndex < count($recognized)) {
             $analysis[] = [
+                'word' => $recognized[$recognizedIndex],
                 'target_word' => '',
                 'recognized_word' => $recognized[$recognizedIndex],
                 'status' => 'extra',
+                'matched' => false,
                 'similarity' => 0,
                 'position' => count($target) + 1,
             ];

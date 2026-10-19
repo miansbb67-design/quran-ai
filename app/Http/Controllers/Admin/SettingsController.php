@@ -26,7 +26,7 @@ class SettingsController extends Controller
             'total_calls' => ApiUsageLog::count(),
             'avg_response_time' => round(ApiUsageLog::avg('response_time_ms') ?? 0, 1),
             'success_rate' => ApiUsageLog::count() > 0 
-                ? round((ApiUsageLog::where('status_code', 200)->count() / ApiUsageLog::count()) * 100, 1) 
+                ? round((ApiUsageLog::where('response_code', 200)->count() / ApiUsageLog::count()) * 100, 1) 
                 : 100,
         ];
 

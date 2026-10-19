@@ -127,4 +127,19 @@ class QuranAiPlatformTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Recitation Analysis Studio');
     }
+
+    /**
+     * Test that an admin can access the settings and telemetry page.
+     */
+    public function test_admin_can_access_settings_page(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/settings');
+        $response->assertStatus(200);
+        $response->assertSee('Platform Settings');
+    }
 }
