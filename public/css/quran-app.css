@@ -1,0 +1,340 @@
+/* Bayan AI Quran Teacher - Design System & Aesthetics */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary-emerald: #064e3b;
+    --primary-emerald-hover: #043628;
+    --primary-emerald-light: #ecfdf5;
+    --primary-emerald-border: #a7f3d0;
+    --accent-gold: #c59b27;
+    --accent-gold-light: #fef3c7;
+    --accent-gold-dark: #92400e;
+    --accent-gold-gradient: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+    --emerald-gradient: linear-gradient(135deg, #064e3b 0%, #0f766e 100%);
+    --dark-gradient: linear-gradient(135deg, #062319 0%, #064e3b 100%);
+    --bg-sand: #fbfbfa;
+    --card-bg: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --font-arabic: 'Amiri', 'Noto Naskh Arabic', serif;
+    --font-arabic-clean: 'Noto Naskh Arabic', serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --shadow-soft: 0 4px 20px -2px rgba(6, 78, 59, 0.08);
+    --shadow-hover: 0 10px 30px -5px rgba(6, 78, 59, 0.15);
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-sand);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* Typography & Arabic Styling */
+.font-arabic {
+    font-family: var(--font-arabic);
+    direction: rtl;
+    line-height: 2.2;
+}
+
+.font-arabic-clean {
+    font-family: var(--font-arabic-clean);
+    direction: rtl;
+}
+
+.quran-verse-text {
+    font-family: var(--font-arabic);
+    font-size: 1.85rem;
+    line-height: 2.6;
+    color: #063d2e;
+    direction: rtl;
+    text-align: right;
+    font-weight: 600;
+}
+
+.ayah-end-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin: 0 8px;
+    background: radial-gradient(circle, #fef3c7 40%, #fde68a 100%);
+    border: 2px solid #d4af37;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    color: #92400e;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* Theme Utilities & Badges */
+.bg-emerald-grad {
+    background: var(--emerald-gradient) !important;
+}
+
+.bg-gold-grad {
+    background: var(--accent-gold-gradient) !important;
+}
+
+.bg-dark-grad {
+    background: var(--dark-gradient) !important;
+}
+
+.text-gold {
+    color: var(--accent-gold) !important;
+}
+
+.text-emerald {
+    color: var(--primary-emerald) !important;
+}
+
+.badge-gold {
+    background-color: var(--accent-gold-light);
+    color: var(--accent-gold-dark);
+    font-weight: 600;
+    border: 1px solid #fde68a;
+    padding: 0.35rem 0.65rem;
+    border-radius: 50rem;
+}
+
+.badge-emerald {
+    background-color: var(--primary-emerald-light);
+    color: var(--primary-emerald);
+    font-weight: 600;
+    border: 1px solid var(--primary-emerald-border);
+    padding: 0.35rem 0.65rem;
+    border-radius: 50rem;
+}
+
+/* Buttons */
+.btn-emerald {
+    background: var(--emerald-gradient);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.btn-emerald:hover, .btn-emerald:focus {
+    background: linear-gradient(135deg, #043628 0%, #0f5132 100%);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.25);
+}
+
+.btn-gold {
+    background: var(--accent-gold-gradient);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.btn-gold:hover, .btn-gold:focus {
+    background: linear-gradient(135deg, #b8860b 0%, #92400e 100%);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(184, 134, 11, 0.3);
+}
+
+.btn-outline-emerald {
+    border: 2px solid var(--primary-emerald);
+    color: var(--primary-emerald);
+    font-weight: 600;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-emerald:hover {
+    background: var(--primary-emerald);
+    color: #ffffff;
+}
+
+/* Cards & Containers */
+.card-glass {
+    background: #ffffff;
+    border: 1px solid #f0fdf4;
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.card-glass:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.islamic-pattern-bg {
+    background-color: #063d2e;
+    background-image: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.hero-banner {
+    position: relative;
+    background: var(--dark-gradient);
+    color: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 3.5rem 2.5rem;
+}
+
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* AI Voice Waves & Visualizer */
+.voice-wave {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+}
+
+.voice-wave span {
+    width: 4px;
+    height: 10px;
+    background: var(--accent-gold);
+    border-radius: 2px;
+    animation: wavePulse 1.2s ease-in-out infinite;
+}
+
+.voice-wave span:nth-child(2) { animation-delay: 0.15s; }
+.voice-wave span:nth-child(3) { animation-delay: 0.3s; }
+.voice-wave span:nth-child(4) { animation-delay: 0.45s; }
+.voice-wave span:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes wavePulse {
+    0%, 100% { height: 8px; }
+    50% { height: 28px; }
+}
+
+.pulse-recording {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    animation: pulseMic 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulseMic {
+    to {
+        box-shadow: 0 0 0 25px rgba(239, 68, 68, 0);
+    }
+}
+
+/* Word Comparison Status Colors */
+.word-feedback {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 2px;
+    border-radius: 6px;
+    font-size: 1.55rem;
+    font-family: var(--font-arabic);
+    transition: all 0.2s ease;
+}
+
+.word-matched {
+    background-color: #dcfce7;
+    color: #14532d;
+    border-bottom: 3px solid #22c55e;
+}
+
+.word-uncertain {
+    background-color: #fef9c3;
+    color: #713f12;
+    border-bottom: 3px solid #eab308;
+}
+
+.word-missing {
+    background-color: #fee2e2;
+    color: #7f1d1d;
+    border-bottom: 3px solid #ef4444;
+}
+
+/* Memorization gym */
+.hifz-masked-word {
+    background: #e5e7eb;
+    color: transparent !important;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+    padding: 0 8px;
+}
+
+.hifz-masked-word.revealed {
+    background: #dbeafe;
+    color: #1e40af !important;
+}
+
+/* Navigation & Sidebar */
+.app-sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1.25rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav-link i {
+    font-size: 1.25rem;
+    color: #6b7280;
+    transition: color 0.2s ease;
+}
+
+.sidebar-nav-link:hover {
+    background-color: var(--primary-emerald-light);
+    color: var(--primary-emerald);
+}
+
+.sidebar-nav-link:hover i {
+    color: var(--primary-emerald);
+}
+
+.sidebar-nav-link.active {
+    background: var(--emerald-gradient);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.sidebar-nav-link.active i {
+    color: #ffffff;
+}
+
+/* Custom Audio Player */
+.audio-player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 1040;
+    padding: 0.75rem 1.5rem;
+}
