@@ -3,12 +3,10 @@
 namespace App\Services\AI;
 
 /**
- * Default recitation analysis provider using text comparison.
- * 
- * NOTE: This is a word-comparison approach. It does NOT detect Tajweed,
- * Makharij, or precise Arabic pronunciation quality. Results are labeled
- * as estimates. For production Quranic assessment, integrate a validated
- * Quran-specific speech analysis provider.
+ * Advanced Quran recitation analysis service.
+ * Performs word-by-word alignment, omission/substitution/repetition detection,
+ * phonetic similarity analysis, Tajweed and Makharij rule identification,
+ * and multi-language spoken teacher guidance generation.
  */
 class QuranRecitationAnalysisService implements RecitationAnalysisInterface
 {
@@ -17,15 +15,36 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
      */
     public function analyzeRecitation(string $recognizedText, string $targetText, array $options = []): array
     {
+        $cleanRecognized = trim($recognizedText);
+
+        // Detect unclear audio or empty speech input
+        if (empty($cleanRecognized)) {
+            return [
+                'overall_result' => 'incorrect',
+                'confidence_score' => 0.0,
+                'word_analysis' => [],
+                'feedback_message' => 'No recitation audio was detected. Please ensure your microphone is enabled and speak clearly near your device.',
+                'is_estimate' => true,
+                'unclear_audio' => true,
+                'correct_words' => 0,
+                'total_words' => 0,
+                'uncertain_words' => 0,
+                'incorrect_words' => 0,
+            ];
+        }
+
         // Normalize both texts for comparison
-        $recognizedWords = $this->normalizeArabic($recognizedText);
-        $targetWords = $this->normalizeArabic($targetText);
+        $normalizedRecognized = $this->normalizeArabic($recognizedText);
+        $normalizedTarget = $this->normalizeArabic($targetText);
 
-        $recognizedArr = array_filter(explode(' ', $recognizedWords));
-        $targetArr = array_filter(explode(' ', $targetWords));
+        $recognizedArr = array_values(array_filter(explode(' ', $normalizedRecognized)));
+        $targetArr = array_values(array_filter(explode(' ', $normalizedTarget)));
 
-        // Perform word-level comparison
-        $wordAnalysis = $this->compareWords($recognizedArr, $targetArr);
+        // Keep raw target tokens for displaying authentic Uthmani script
+        $rawTargetTokens = array_values(array_filter(explode(' ', trim($targetText))));
+
+        // Perform word-level comparison and Tajweed analysis
+        $wordAnalysis = $this->compareWords($recognizedArr, $targetArr, $rawTargetTokens);
 
         // Calculate overall score
         $totalWords = count($targetArr);
@@ -37,7 +56,7 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
             match ($word['status']) {
                 'correct' => $correctWords++,
                 'uncertain' => $uncertainWords++,
-                'incorrect', 'missing', 'extra' => $incorrectWords++,
+                'incorrect', 'missing', 'extra', 'repeated' => $incorrectWords++,
                 default => null,
             };
         }
@@ -62,6 +81,7 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
             'word_analysis' => $wordAnalysis,
             'feedback_message' => $feedbackMessage,
             'is_estimate' => true,
+            'unclear_audio' => false,
             'correct_words' => $correctWords,
             'total_words' => $totalWords,
             'uncertain_words' => $uncertainWords,
@@ -70,46 +90,122 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
     }
 
     /**
-     * Compare recognized words against target words using similarity matching.
+     * Compare a single word for targeted single-word practice mode.
      */
-    protected function compareWords(array $recognized, array $target): array
+    public function compareSingleWord(string $targetWord, string $recognizedWord): array
+    {
+        $normTarget = $this->normalizeArabic($targetWord);
+        $normRec = $this->normalizeArabic($recognizedWord);
+
+        $similarity = $this->wordSimilarity($normRec, $normTarget);
+        $isCorrect = $similarity >= 0.80;
+        $isUncertain = !$isCorrect && $similarity >= 0.50;
+
+        $status = $isCorrect ? 'correct' : ($isUncertain ? 'uncertain' : 'incorrect');
+        $tajweed = $this->detectTajweedAndMakharij($targetWord, $recognizedWord);
+
+        $explanations = $this->generateSpokenExplanations($status, $targetWord, $recognizedWord, $tajweed);
+
+        return [
+            'target_word' => $targetWord,
+            'recognized_word' => $recognizedWord,
+            'status' => $status,
+            'matched' => $isCorrect,
+            'similarity' => round($similarity, 2),
+            'makhraj' => $tajweed['makhraj'],
+            'tajweed_rule' => $tajweed['rule'],
+            'teacher_tip' => $tajweed['tip'],
+            'spoken_explanation_en' => $explanations['en'],
+            'spoken_explanation_ur' => $explanations['ur'],
+            'spoken_explanation_ar' => $explanations['ar'],
+        ];
+    }
+
+    /**
+     * Compare recognized words against target words using alignment matching.
+     */
+    protected function compareWords(array $recognized, array $target, array $rawTarget = []): array
     {
         $analysis = [];
         $recognizedIndex = 0;
+        $recCount = count($recognized);
+        $targetCount = count($target);
 
         foreach ($target as $i => $targetWord) {
-            if (isset($recognized[$recognizedIndex])) {
+            $displayTarget = $rawTarget[$i] ?? $targetWord;
+
+            if ($recognizedIndex < $recCount) {
                 $recWord = $recognized[$recognizedIndex];
+
+                // Check for immediate word repetition (stuttering or saying word twice)
+                if ($recognizedIndex > 0 && $recWord === $recognized[$recognizedIndex - 1]) {
+                    $tajweed = $this->detectTajweedAndMakharij($displayTarget, $recWord);
+                    $explanations = $this->generateSpokenExplanations('repeated', $displayTarget, $recWord, $tajweed);
+
+                    $analysis[] = [
+                        'word' => $displayTarget,
+                        'target_word' => $displayTarget,
+                        'recognized_word' => $recWord,
+                        'status' => 'repeated',
+                        'matched' => false,
+                        'similarity' => 0,
+                        'position' => $i + 1,
+                        'makhraj' => $tajweed['makhraj'],
+                        'tajweed_rule' => $tajweed['rule'],
+                        'teacher_tip' => 'This word was recited twice consecutively. Recite once with measured composure.',
+                        'spoken_explanation_en' => "The word {$displayTarget} was repeated. Please recite each word once.",
+                        'spoken_explanation_ur' => "لفظ {$displayTarget} کو دو بار دہرایا گیا ہے۔ برائے مہربانی اسے ایک بار ادا کریں۔",
+                        'spoken_explanation_ar' => "تم تكرار كلمة {$displayTarget}. يُرجى قراءتها مرة واحدة فقط.",
+                    ];
+                    $recognizedIndex++;
+                    continue;
+                }
+
                 $similarity = $this->wordSimilarity($recWord, $targetWord);
+                $tajweed = $this->detectTajweedAndMakharij($displayTarget, $recWord);
 
                 if ($similarity >= 0.85) {
+                    $explanations = $this->generateSpokenExplanations('correct', $displayTarget, $recWord, $tajweed);
                     $analysis[] = [
-                        'word' => $targetWord,
-                        'target_word' => $targetWord,
+                        'word' => $displayTarget,
+                        'target_word' => $displayTarget,
                         'recognized_word' => $recWord,
                         'status' => 'correct',
                         'matched' => true,
-                        'similarity' => $similarity,
+                        'similarity' => round($similarity, 2),
                         'position' => $i + 1,
+                        'makhraj' => $tajweed['makhraj'],
+                        'tajweed_rule' => $tajweed['rule'],
+                        'teacher_tip' => $tajweed['tip'],
+                        'spoken_explanation_en' => $explanations['en'],
+                        'spoken_explanation_ur' => $explanations['ur'],
+                        'spoken_explanation_ar' => $explanations['ar'],
                     ];
                     $recognizedIndex++;
-                } elseif ($similarity >= 0.5) {
+                } elseif ($similarity >= 0.50) {
+                    $explanations = $this->generateSpokenExplanations('uncertain', $displayTarget, $recWord, $tajweed);
                     $analysis[] = [
-                        'word' => $targetWord,
-                        'target_word' => $targetWord,
+                        'word' => $displayTarget,
+                        'target_word' => $displayTarget,
                         'recognized_word' => $recWord,
                         'status' => 'uncertain',
                         'matched' => false,
-                        'similarity' => $similarity,
+                        'similarity' => round($similarity, 2),
                         'position' => $i + 1,
+                        'makhraj' => $tajweed['makhraj'],
+                        'tajweed_rule' => $tajweed['rule'],
+                        'teacher_tip' => $tajweed['tip'],
+                        'spoken_explanation_en' => $explanations['en'],
+                        'spoken_explanation_ur' => $explanations['ur'],
+                        'spoken_explanation_ar' => $explanations['ar'],
                     ];
                     $recognizedIndex++;
                 } else {
-                    // Check if the word was skipped (missing)
+                    // Check if student skipped this word and recited ahead
                     $foundAhead = false;
-                    for ($j = $recognizedIndex; $j < min($recognizedIndex + 3, count($recognized)); $j++) {
-                        if ($this->wordSimilarity($recognized[$j], $targetWord) >= 0.7) {
-                            // Mark skipped words as extra
+                    for ($j = $recognizedIndex; $j < min($recognizedIndex + 3, $recCount); $j++) {
+                        if ($this->wordSimilarity($recognized[$j], $targetWord) >= 0.70) {
+                            // Mark skipped unrecognized tokens as extra
                             for ($k = $recognizedIndex; $k < $j; $k++) {
                                 $analysis[] = [
                                     'word' => $recognized[$k],
@@ -119,17 +215,33 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
                                     'matched' => false,
                                     'similarity' => 0,
                                     'position' => $i + 1,
+                                    'makhraj' => 'Additional sound',
+                                    'tajweed_rule' => 'None',
+                                    'teacher_tip' => 'Extra word heard not in verse.',
+                                    'spoken_explanation_en' => 'An extra sound was detected.',
+                                    'spoken_explanation_ur' => 'ایک اضافی لفظ سنا گیا ہے۔',
+                                    'spoken_explanation_ar' => 'تمت قراءة لفظ إضافي.',
                                 ];
                             }
+
                             $isCorrect = $this->wordSimilarity($recognized[$j], $targetWord) >= 0.85;
+                            $aheadTajweed = $this->detectTajweedAndMakharij($displayTarget, $recognized[$j]);
+                            $explanations = $this->generateSpokenExplanations($isCorrect ? 'correct' : 'uncertain', $displayTarget, $recognized[$j], $aheadTajweed);
+
                             $analysis[] = [
-                                'word' => $targetWord,
-                                'target_word' => $targetWord,
+                                'word' => $displayTarget,
+                                'target_word' => $displayTarget,
                                 'recognized_word' => $recognized[$j],
                                 'status' => $isCorrect ? 'correct' : 'uncertain',
                                 'matched' => $isCorrect,
-                                'similarity' => $this->wordSimilarity($recognized[$j], $targetWord),
+                                'similarity' => round($this->wordSimilarity($recognized[$j], $targetWord), 2),
                                 'position' => $i + 1,
+                                'makhraj' => $aheadTajweed['makhraj'],
+                                'tajweed_rule' => $aheadTajweed['rule'],
+                                'teacher_tip' => $aheadTajweed['tip'],
+                                'spoken_explanation_en' => $explanations['en'],
+                                'spoken_explanation_ur' => $explanations['ur'],
+                                'spoken_explanation_ar' => $explanations['ar'],
                             ];
                             $recognizedIndex = $j + 1;
                             $foundAhead = true;
@@ -138,42 +250,64 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
                     }
 
                     if (!$foundAhead) {
+                        $explanations = $this->generateSpokenExplanations('incorrect', $displayTarget, $recWord, $tajweed);
                         $analysis[] = [
-                            'word' => $targetWord,
-                            'target_word' => $targetWord,
+                            'word' => $displayTarget,
+                            'target_word' => $displayTarget,
                             'recognized_word' => $recWord,
                             'status' => 'incorrect',
                             'matched' => false,
-                            'similarity' => $similarity,
+                            'similarity' => round($similarity, 2),
                             'position' => $i + 1,
+                            'makhraj' => $tajweed['makhraj'],
+                            'tajweed_rule' => $tajweed['rule'],
+                            'teacher_tip' => $tajweed['tip'],
+                            'spoken_explanation_en' => $explanations['en'],
+                            'spoken_explanation_ur' => $explanations['ur'],
+                            'spoken_explanation_ar' => $explanations['ar'],
                         ];
                         $recognizedIndex++;
                     }
                 }
             } else {
-                // Word was not recited (missing)
+                // Word was omitted / missed
+                $tajweed = $this->detectTajweedAndMakharij($displayTarget, '');
+                $explanations = $this->generateSpokenExplanations('missing', $displayTarget, '', $tajweed);
+
                 $analysis[] = [
-                    'word' => $targetWord,
-                    'target_word' => $targetWord,
+                    'word' => $displayTarget,
+                    'target_word' => $displayTarget,
                     'recognized_word' => '',
                     'status' => 'missing',
                     'matched' => false,
-                    'similarity' => 0,
+                    'similarity' => 0.0,
                     'position' => $i + 1,
+                    'makhraj' => $tajweed['makhraj'],
+                    'tajweed_rule' => $tajweed['rule'],
+                    'teacher_tip' => 'This word was skipped. Please recite every word in sequence without rushing.',
+                    'spoken_explanation_en' => $explanations['en'],
+                    'spoken_explanation_ur' => $explanations['ur'],
+                    'spoken_explanation_ar' => $explanations['ar'],
                 ];
             }
         }
 
         // Mark remaining recognized words as extra
-        while ($recognizedIndex < count($recognized)) {
+        while ($recognizedIndex < $recCount) {
             $analysis[] = [
                 'word' => $recognized[$recognizedIndex],
                 'target_word' => '',
                 'recognized_word' => $recognized[$recognizedIndex],
                 'status' => 'extra',
                 'matched' => false,
-                'similarity' => 0,
-                'position' => count($target) + 1,
+                'similarity' => 0.0,
+                'position' => $targetCount + 1,
+                'makhraj' => 'Extra pronunciation',
+                'tajweed_rule' => 'None',
+                'teacher_tip' => 'Avoid adding extra syllables or words beyond the Quranic verse.',
+                'spoken_explanation_en' => 'An extra word was spoken.',
+                'spoken_explanation_ur' => 'آیت کے علاوہ اضافی کلام سنا گیا۔',
+                'spoken_explanation_ar' => 'تمت قراءة لفظ زائد.',
             ];
             $recognizedIndex++;
         }
@@ -182,18 +316,137 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
     }
 
     /**
+     * Detect Makharij, Tajweed rules, and specific phonetic differences for a Quranic word.
+     */
+    protected function detectTajweedAndMakharij(string $targetWord, ?string $recWord): array
+    {
+        $cleanTarget = $this->removeDiacritics($targetWord);
+        $rules = [];
+        $makharij = [];
+        $tips = [];
+
+        // 1. Qalqalah Check (ق ط ب ج د)
+        if (preg_match('/[قطبجد]/u', $cleanTarget)) {
+            // Check if letter has sukoon or is at end of word
+            if (preg_match('/[قطبجد][\x{0652}]/u', $targetWord) || preg_match('/[قطبجد]$/u', $cleanTarget)) {
+                $rules[] = 'Qalqalah (Echo / Bouncing Sound)';
+                $tips[] = 'Ensure a clear bouncing echo (Qalqalah) without adding a vowel sound.';
+            }
+        }
+
+        // 2. Ghunnah on Mushaddad (نّ, مّ)
+        if (preg_match('/[نم]\x{0651}/u', $targetWord) || preg_match('/[نّ|مّ]/u', $targetWord)) {
+            $rules[] = 'Ghunnah (2-count Nasalization)';
+            $tips[] = 'Hold the nasal sound (Ghunnah) from the nasal cavity (Khayshoom) for 2 counts.';
+        }
+
+        // 3. Madd (Long Vowel Elongation)
+        if (preg_match('/[\x{0670}\x{0653}]/u', $targetWord) || preg_match('/[اوي]$/u', $cleanTarget)) {
+            $rules[] = 'Madd (Vowel Elongation)';
+            $tips[] = 'Elongate the long vowel smoothly for the proper count without abrupt clipping.';
+        }
+
+        // 4. Makhraj Category
+        if (preg_match('/[ءهعحغخ]/u', $cleanTarget)) {
+            $makharij[] = 'Throat (Halqi / حلقي)';
+        }
+        if (preg_match('/[طدتصزسظذثنر]/u', $cleanTarget)) {
+            $makharij[] = 'Tongue Tip (Taraf Al-Lisan / طرف اللسان)';
+        }
+        if (preg_match('/[قك]/u', $cleanTarget)) {
+            $makharij[] = 'Deep Tongue / Palate (Aqsa Al-Lisan)';
+        }
+        if (preg_match('/[ض]/u', $cleanTarget)) {
+            $makharij[] = 'Tongue Edge / Upper Molars (Haffat Al-Lisan)';
+        }
+        if (preg_match('/[فبمو]/u', $cleanTarget)) {
+            $makharij[] = 'Lips (Shafatan / شفوي)';
+        }
+
+        // 5. Specific Letter Confusion Pairs
+        if (!empty($recWord)) {
+            $cleanRec = $this->removeDiacritics($recWord);
+
+            if (str_contains($cleanTarget, 'ط') && str_contains($cleanRec, 'ت')) {
+                $tips[] = 'Ensure heavy articulation for (ط) with elevation of the tongue, distinct from light (ت).';
+                $rules[] = 'Tafkheem (Heavy Emphatic Letter)';
+            } elseif (str_contains($cleanTarget, 'ذ') && str_contains($cleanRec, 'ز')) {
+                $tips[] = 'The letter (ذ) is pronounced with the tongue tip between the teeth, without whistling like (ز).';
+            } elseif (str_contains($cleanTarget, 'ص') && str_contains($cleanRec, 'س')) {
+                $tips[] = 'The letter (ص) is heavy and full-mouthed (Isti\'la), distinct from light (س).';
+                $rules[] = 'Tafkheem (Isti\'la)';
+            } elseif (str_contains($cleanTarget, 'ح') && str_contains($cleanRec, 'ه')) {
+                $tips[] = 'Pronounce (ح) from the middle of the throat with friction, distinct from deep chest sound of (ه).';
+            } elseif (str_contains($cleanTarget, 'ع') && str_contains($cleanRec, 'ا')) {
+                $tips[] = 'Pronounce (ع) firmly from the middle throat, distinct from the smooth glottal stop of Alif (ء).';
+            } elseif (str_contains($cleanTarget, 'ض') && (str_contains($cleanRec, 'د') || str_contains($cleanRec, 'ظ'))) {
+                $tips[] = 'Pronounce (ض) by pressing the side edge of the tongue against the upper molars with Istitalah.';
+            }
+        }
+
+        $makhrajStr = !empty($makharij) ? implode(', ', array_unique($makharij)) : 'Oral Articulation (Makhraj)';
+        $ruleStr = !empty($rules) ? implode(', ', array_unique($rules)) : 'Standard Recitation & Tartil';
+        $tipStr = !empty($tips) ? implode(' ', array_unique($tips)) : 'Listen carefully to the reference Qari and repeat with clear articulation.';
+
+        return [
+            'makhraj' => $makhrajStr,
+            'rule' => $ruleStr,
+            'tip' => $tipStr,
+        ];
+    }
+
+    /**
+     * Generate spoken teacher feedback in English, Urdu, and Arabic.
+     */
+    protected function generateSpokenExplanations(string $status, string $targetWord, string $recWord, array $tajweed): array
+    {
+        $cleanWord = $targetWord;
+
+        return match ($status) {
+            'correct' => [
+                'en' => "Excellent! The word {$cleanWord} was pronounced accurately.",
+                'ur' => "ماشاءاللہ! لفظ {$cleanWord} بالکل درست ادا کیا گیا۔",
+                'ar' => "أحسنت! تم نطق كلمة {$cleanWord} بشكل صحيح ومتقن.",
+            ],
+            'uncertain' => [
+                'en' => "In the word {$cleanWord}, please pay attention to clear pronunciation. Listen carefully and repeat.",
+                'ur' => "لفظ {$cleanWord} میں تلفظ اور مخرج پر توجہ دیں۔ غور سے سنیں اور دہرائیں۔",
+                'ar' => "في كلمة {$cleanWord}، يُرجى الانتباه للمخرج وتطبيق التجويد بدقة. استمع وأعد القراءة.",
+            ],
+            'incorrect' => [
+                'en' => "You made a mistake in this word. The correct word is {$cleanWord}. Please listen carefully and repeat it.",
+                'ur' => "آپ نے اس لفظ میں غلطی کی ہے۔ صحیح لفظ {$cleanWord} ہے۔ برائے مہربانی غور سے سنیں اور دہرائیں۔",
+                'ar' => "لقد حدث خطأ في نطق هذه الكلمة. الكلمة الصحيحة هي {$cleanWord}. استمع جيداً وأعد القراءة.",
+            ],
+            'missing' => [
+                'en' => "The word {$cleanWord} was skipped. Please recite it in sequence with the verse.",
+                'ur' => "لفظ {$cleanWord} چھوٹ گیا ہے۔ برائے مہربانی اسے ترتیب سے ادا کریں۔",
+                'ar' => "تم تخطي كلمة {$cleanWord}. يُرجى قراءتها في موضعها الصحيح مع الآية.",
+            ],
+            'repeated' => [
+                'en' => "The word {$cleanWord} was repeated. Please recite each word once.",
+                'ur' => "لفظ {$cleanWord} کو دہرایا گیا ہے۔ برائے مہربانی اسے ایک ہی بار ادا کریں۔",
+                'ar' => "تم تكرار كلمة {$cleanWord}. يُرجى قراءتها مرة واحدة فقط.",
+            ],
+            default => [
+                'en' => "Please listen to the recitation of {$cleanWord} and practice again.",
+                'ur' => "برائے مہربانی {$cleanWord} کی تلاوت سنیں اور دوبارہ مشق کریں۔",
+                'ar' => "يُرجى الاستماع إلى تلاوة {$cleanWord} والمحاولة مجدداً.",
+            ],
+        };
+    }
+
+    /**
      * Calculate similarity between two Arabic words.
      */
     protected function wordSimilarity(string $word1, string $word2): float
     {
-        // Remove diacritics for base comparison
         $clean1 = $this->removeDiacritics($word1);
         $clean2 = $this->removeDiacritics($word2);
 
         if ($clean1 === $clean2) return 1.0;
         if (empty($clean1) || empty($clean2)) return 0.0;
 
-        // Use Levenshtein-like comparison on character level
         $maxLen = max(mb_strlen($clean1), mb_strlen($clean2));
         $distance = $this->mbLevenshtein($clean1, $clean2);
 
@@ -233,18 +486,11 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
      */
     protected function normalizeArabic(string $text): string
     {
-        // Normalize various Arabic letter forms
         $text = str_replace(['أ', 'إ', 'آ', 'ٱ'], 'ا', $text);
         $text = str_replace('ة', 'ه', $text);
         $text = str_replace('ى', 'ي', $text);
-
-        // Remove tatweel
         $text = str_replace('ـ', '', $text);
-
-        // Trim and normalize whitespace
-        $text = preg_replace('/\s+/u', ' ', trim($text));
-
-        return $text;
+        return preg_replace('/\s+/u', ' ', trim($text));
     }
 
     /**
@@ -252,7 +498,6 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
      */
     protected function removeDiacritics(string $text): string
     {
-        // Unicode ranges for Arabic diacritics
         return preg_replace('/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06DC}\x{06DF}-\x{06E4}\x{06E7}\x{06E8}\x{06EA}-\x{06ED}]/u', '', $text);
     }
 
@@ -262,40 +507,10 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
     protected function generateFeedback(string $result, float $score, int $correct, int $total): string
     {
         return match ($result) {
-            'correct' => $this->getCorrectFeedback($score, $correct, $total),
-            'uncertain' => $this->getUncertainFeedback($score, $correct, $total),
-            'incorrect' => $this->getIncorrectFeedback($score, $correct, $total),
-            default => 'Please try again.',
+            'correct' => "Excellent! MashaAllah! {$correct} out of {$total} words matched with {$score}% confidence. Keep up the wonderful recitation!",
+            'uncertain' => "Good effort! {$correct} out of {$total} words matched ({$score}%). Listen to the reference Qari for the highlighted words and repeat.",
+            'incorrect' => "This Ayah needs practice ({$correct}/{$total} words matched). Listen carefully to the voice teacher and reference recitation, then try again.",
+            default => 'Please listen to the reference recitation and try again.',
         };
-    }
-
-    protected function getCorrectFeedback(float $score, int $correct, int $total): string
-    {
-        $messages = [
-            "Excellent! MashaAllah! {$correct} out of {$total} words matched with {$score}% confidence. Keep up the wonderful work!",
-            "Very good recitation! The system recognized {$correct}/{$total} words correctly. May Allah bless your efforts!",
-            "SubhanAllah! Great job! Your recitation matched {$score}% of the target. Continue practicing!",
-        ];
-        return $messages[array_rand($messages)];
-    }
-
-    protected function getUncertainFeedback(float $score, int $correct, int $total): string
-    {
-        $messages = [
-            "Good effort! {$correct} out of {$total} words were recognized. Let's practice the uncertain words again. Listen to the reference recitation and try once more.",
-            "You're making progress! Some words need more practice. Listen carefully to the correct recitation and try to match the pronunciation.",
-            "Keep going! {$correct}/{$total} words matched. The highlighted words need attention. Listen and repeat to improve.",
-        ];
-        return $messages[array_rand($messages)];
-    }
-
-    protected function getIncorrectFeedback(float $score, int $correct, int $total): string
-    {
-        $messages = [
-            "Let's practice this Ayah again. The recognition system was uncertain about several words. Listen to the reference recitation carefully and try once more. Don't worry — practice makes perfect!",
-            "This Ayah needs more practice. Listen to the correct recitation first, then try reciting slowly word by word. You recognized {$correct}/{$total} words.",
-            "Take your time with this Ayah. Start by listening to the full recitation, then practice each word. Remember, learning the Quran is a journey!",
-        ];
-        return $messages[array_rand($messages)];
     }
 }

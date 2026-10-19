@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\PracticeSession;
 use App\Services\AI\QuranRecitationAnalysisService;
+use App\Services\AI\RecitationAnalysisInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -141,5 +142,86 @@ class QuranAiPlatformTest extends TestCase
         $response = $this->actingAs($admin)->get('/admin/settings');
         $response->assertStatus(200);
         $response->assertSee('Platform Settings');
+    }
+
+    /**
+     * Test that recitation analysis generates Tajweed rules and multi-language spoken explanations.
+     */
+    public function test_ai_recitation_analysis_service_tajweed_and_voice_explanations(): void
+    {
+        $service = app(RecitationAnalysisInterface::class);
+        $analysis = $service->analyzeRecitation(
+            'بسم الله الرحيم',
+            'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+        );
+
+        $this->assertNotEmpty($analysis['word_analysis']);
+        $firstWord = $analysis['word_analysis'][0];
+        $this->assertArrayHasKey('makhraj', $firstWord);
+        $this->assertArrayHasKey('tajweed_rule', $firstWord);
+        $this->assertArrayHasKey('spoken_explanation_en', $firstWord);
+        $this->assertArrayHasKey('spoken_explanation_ur', $firstWord);
+        $this->assertArrayHasKey('spoken_explanation_ar', $firstWord);
+    }
+
+    /**
+     * Test that user can practice an individual word via AJAX.
+     */
+    public function test_user_can_practice_single_word(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/ai-teacher/analyze-word', [
+            'target_word' => 'الرَّحْمَٰنِ',
+            'recognized_word' => 'الرحمن',
+            'surah_number' => 1,
+            'ayah_number' => 1,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'matched' => true,
+            'status' => 'correct',
+        ]);
+        $response->assertJsonStructure([
+            'target_word',
+            'recognized_word',
+            'status',
+            'matched',
+            'similarity',
+            'makhraj',
+            'tajweed_rule',
+            'teacher_tip',
+            'spoken_explanation_en',
+        ]);
+    }
+
+    /**
+     * Test that user can delete their practice session history for privacy.
+     */
+    public function test_user_can_delete_session_history(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+
+        $session = \App\Models\PracticeSession::create([
+            'user_id' => $user->id,
+            'session_type' => 'recitation',
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/ai-teacher/delete-session-history', [
+            'session_id' => $session->id,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('practice_sessions', ['id' => $session->id]);
     }
 }

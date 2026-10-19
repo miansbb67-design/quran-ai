@@ -86,6 +86,63 @@ class QuranApiService
     }
 
     /**
+     * Get word-level data with verified word audio for an Ayah.
+     */
+    public function getAyahWords(int $surahNumber, int $ayahNumber): array
+    {
+        $cacheKey = "ayah_words_{$surahNumber}_{$ayahNumber}";
+        return Cache::remember($cacheKey, 86400, function () use ($surahNumber, $ayahNumber) {
+            try {
+                $response = Http::timeout(6)->get("https://api.quran.com/api/v4/verses/by_key/{$surahNumber}:{$ayahNumber}", [
+                    'words' => 'true',
+                    'word_fields' => 'text_uthmani,audio_url',
+                ]);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+                    $rawWords = $json['verse']['words'] ?? [];
+                    $words = [];
+                    foreach ($rawWords as $w) {
+                        if (($w['char_type_name'] ?? '') === 'end') {
+                            continue;
+                        }
+                        $audio = !empty($w['audio_url']) ? 'https://audio.qurancdn.com/' . ltrim($w['audio_url'], '/') : null;
+                        $words[] = [
+                            'position' => $w['position'] ?? (count($words) + 1),
+                            'text_uthmani' => $w['text_uthmani'] ?? ($w['text'] ?? ''),
+                            'audio_url' => $audio,
+                            'translation' => $w['translation']['text'] ?? '',
+                            'transliteration' => $w['transliteration']['text'] ?? '',
+                        ];
+                    }
+                    if (!empty($words)) {
+                        return $words;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback to text parsing
+            }
+
+            // Fallback: tokenize verse text from AlQuran Cloud
+            $ayah = $this->getAyah($surahNumber, $ayahNumber);
+            $text = $ayah['text'] ?? '';
+            $rawTokens = array_filter(explode(' ', trim($text)));
+            $fallback = [];
+            $pos = 1;
+            foreach ($rawTokens as $tok) {
+                $fallback[] = [
+                    'position' => $pos++,
+                    'text_uthmani' => $tok,
+                    'audio_url' => null,
+                    'translation' => '',
+                    'transliteration' => '',
+                ];
+            }
+            return $fallback;
+        });
+    }
+
+    /**
      * Search the Quran.
      */
     public function search(string $keyword, string $edition = 'en.asad'): ?array

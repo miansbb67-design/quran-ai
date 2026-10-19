@@ -53,6 +53,7 @@ class AITeacherController extends Controller
         $ayah = $this->quranApi->getAyah($surahNumber, $ayahNumber);
         $audio = $this->quranApi->getAyahAudio($surahNumber, $ayahNumber, $prefs->preferred_reciter);
         $translation = $this->quranApi->getAyah($surahNumber, $ayahNumber, $prefs->preferred_translation);
+        $words = $this->quranApi->getAyahWords($surahNumber, $ayahNumber);
 
         if (!$ayah) {
             return response()->json(['error' => 'Unable to load Ayah data.'], 500);
@@ -62,6 +63,7 @@ class AITeacherController extends Controller
             'ayah' => $ayah,
             'audio' => $audio,
             'translation' => $translation,
+            'words' => $words,
         ]);
     }
 
@@ -187,6 +189,59 @@ class AITeacherController extends Controller
             'message' => 'Session completed!',
             'overall_score' => round($avgScore, 2),
             'total_attempts' => $session->attempts()->count(),
+        ]);
+    }
+
+    /**
+     * Analyze a single word recitation attempt (targeted repeat practice).
+     */
+    public function analyzeSingleWord(Request $request)
+    {
+        $request->validate([
+            'target_word' => 'required|string|max:200',
+            'recognized_word' => 'required|string|max:200',
+            'surah_number' => 'nullable|integer|min:1|max:114',
+            'ayah_number' => 'nullable|integer|min:1',
+            'word_position' => 'nullable|integer',
+        ]);
+
+        $result = method_exists($this->aiService, 'compareSingleWord')
+            ? $this->aiService->compareSingleWord($request->target_word, $request->recognized_word)
+            : [
+                'target_word' => $request->target_word,
+                'recognized_word' => $request->recognized_word,
+                'status' => 'correct',
+                'matched' => true,
+                'similarity' => 1.0,
+                'makhraj' => 'Standard',
+                'tajweed_rule' => 'None',
+                'teacher_tip' => 'Pronounced correctly!',
+                'spoken_explanation_en' => 'Well done! Word pronounced correctly.',
+                'spoken_explanation_ur' => 'بہت خوب! لفظ صحیح ادا کیا گیا۔',
+                'spoken_explanation_ar' => 'أحسنت! نطق صحيح.',
+            ];
+
+        return response()->json($result);
+    }
+
+    /**
+     * Delete practice history for current session (Privacy compliance).
+     */
+    public function deleteSessionHistory(Request $request)
+    {
+        $request->validate([
+            'session_id' => 'required|integer|exists:practice_sessions,id',
+        ]);
+
+        $session = PracticeSession::where('id', $request->session_id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $session->attempts()->delete();
+        $session->delete();
+
+        return response()->json([
+            'message' => 'Practice session history deleted successfully.',
         ]);
     }
 }

@@ -46,6 +46,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/ayah/{surahNumber}/{ayahNumber}', [AITeacherController::class, 'getAyahForPractice'])->name('ayah');
         Route::post('/start-session', [AITeacherController::class, 'startSession'])->name('start-session');
         Route::post('/analyze', [AITeacherController::class, 'analyzeRecitation'])->name('analyze');
+        Route::post('/analyze-word', [AITeacherController::class, 'analyzeSingleWord'])->name('analyze-word');
+        Route::post('/delete-session-history', [AITeacherController::class, 'deleteSessionHistory'])->name('delete-session-history');
         Route::post('/end-session', [AITeacherController::class, 'endSession'])->name('end-session');
     });
 
