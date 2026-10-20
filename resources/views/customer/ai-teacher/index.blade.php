@@ -166,15 +166,21 @@
 
                 <!-- Voice Recording Stage -->
                 <div class="text-center py-4 bg-white rounded-4 border p-3">
+                    <div class="mb-2">
+                        <span class="badge bg-emerald-light text-emerald border border-emerald-border px-3 py-1 rounded-pill small">
+                            <i class="bi bi-lightning-charge-fill text-gold me-1"></i> Auto-Stop: Automatically analyzes when Ayah is finished
+                        </span>
+                    </div>
+
                     <div class="mb-3 position-relative d-inline-block">
-                        <button type="button" id="btnRecord" class="btn rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg transition" style="width: 86px; height: 86px; background: var(--emerald-gradient); color: white; border: 4px solid #d4af37;">
+                        <button type="button" id="btnRecord" class="btn rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg transition" style="width: 86px; height: 86px; background: var(--emerald-gradient); color: white; border: 4px solid #d4af37; cursor: pointer;">
                             <i class="bi bi-mic-fill fs-1" id="micIcon"></i>
                         </button>
                         <span id="recordingRipple" class="position-absolute top-0 start-0 w-100 h-100 rounded-circle border border-danger d-none"></span>
                     </div>
                     
                     <h5 class="fw-bold text-dark mb-1" id="micStatusHeading">Click Microphone to Recite</h5>
-                    <p class="text-muted small mb-3" id="micStatusDesc">Recite clearly in Arabic. Speak naturally close to your device.</p>
+                    <p class="text-muted small mb-3" id="micStatusDesc">Recite clearly in Arabic. The AI automatically detects when you complete the Ayah.</p>
 
                     <!-- Real-time transcript preview -->
                     <div class="p-3 bg-light rounded-3 border mb-3 text-center" id="transcriptBox" style="min-height: 48px;">
@@ -317,159 +323,256 @@
         var currentSurah = parseInt($('#selectSurah').val()) || 1;
         var currentAyah = parseInt($('#selectAyah').val()) || 1;
         var sessionId = null;
-        var isRecording = false;
-        var recognition = null;
-        var modalRecognition = null;
+        var isListening = false;
+        var activeRecognition = null;
+        var activeModalRecognition = null;
         var isModalRecording = false;
+        var autoStopAyahTimer = null;
+        var silenceTimer = null;
+        var modalSilenceTimer = null;
         var transcribedText = "";
         var refAudioUrl = "";
         var currentAyahWords = [];
+        var targetVerseText = "";
+        var targetWordsClean = [];
         var activeSelectedWord = null;
         var latestAnalysis = null;
         var currentMistakes = [];
 
+        // Helper: normalize Arabic letters and strip diacritics
+        function normalizeArabicText(text) {
+            if (!text) return '';
+            return text.toString()
+                .replace(/[\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g, '')
+                .replace(/[أإآٱ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/ـ/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // Helper: Levenshtein similarity
+        function wordSimilarityJS(s1, s2) {
+            if (s1 === s2) return 1.0;
+            if (!s1 || !s2) return 0.0;
+            var len1 = s1.length, len2 = s2.length;
+            var maxLen = Math.max(len1, len2);
+            if (maxLen === 0) return 1.0;
+            var matrix = [];
+            for (var i = 0; i <= len1; i++) matrix[i] = [i];
+            for (var j = 0; j <= len2; j++) matrix[0][j] = j;
+            for (var i = 1; i <= len1; i++) {
+                for (var j = 1; j <= len2; j++) {
+                    var cost = (s1[i - 1] === s2[j - 1]) ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i - 1][j] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return Math.max(0, 1 - (matrix[len1][len2] / maxLen));
+        }
+
         // Single Word Modal Object
         var singleWordModal = new bootstrap.Modal(document.getElementById('singleWordModal'));
 
-        // Initialize Web Speech Recognition
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'ar-SA'; // Arabic (Saudi Arabia)
+        // Fresh SpeechRecognition factory & start handler
+        function startRecitationListening() {
+            if (isListening) return;
 
-            recognition.onstart = function() {
-                isRecording = true;
-                $('#btnRecord').addClass('pulse-recording').css('background', '#ef4444');
-                $('#recordingRipple').removeClass('d-none');
-                $('#micIcon').removeClass('bi-mic-fill').addClass('bi-stop-fill');
-                $('#micStatusHeading').text('Listening to your recitation...');
-                $('#micStatusDesc').text('Recite the verse now. Click again when finished.');
-                $('#speechStatusIndicator').html('<i class="bi bi-record-circle text-danger me-1"></i> Recording (ar-SA)...').removeClass('bg-light').addClass('bg-danger-subtle text-danger');
-                transcribedText = "";
-                $('#liveTranscript').text('Listening in Arabic...').removeClass('text-danger');
-            };
-
-            recognition.onresult = function(event) {
-                var interimTranscript = '';
-                for (var i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        transcribedText += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
-                }
-                var display = transcribedText || interimTranscript;
-                $('#liveTranscript').text(display).addClass('text-dark fw-bold font-arabic fs-5');
-            };
-
-            recognition.onerror = function(event) {
-                console.log('Speech error:', event.error);
-                stopRecordingUI();
-                if (event.error === 'not-allowed') {
-                    $('#speechStatusIndicator').html('<i class="bi bi-slash-circle text-danger me-1"></i> Mic Denied').addClass('bg-danger-subtle text-danger');
-                    alert('Microphone access is not allowed by your browser. You can use the manual Arabic text input option below.');
-                    $('#manualInputContainer').removeClass('d-none');
-                } else if (event.error === 'no-speech') {
-                    $('#speechStatusIndicator').html('<i class="bi bi-mic-mute text-warning me-1"></i> No Speech Heard').addClass('bg-warning-subtle text-warning');
-                }
-            };
-
-            recognition.onend = function() {
-                if (isRecording) {
-                    stopRecordingUI();
-                    if (transcribedText.trim().length > 0) {
-                        submitRecitation(transcribedText);
-                    } else {
-                        $('#micStatusHeading').text('No Recitation Heard');
-                        $('#micStatusDesc').text('Audio was silent or very quiet. Please click the microphone and try again.');
-                        $('#liveTranscript').text('No speech recognized. Please verify your mic and recite again.').addClass('text-danger');
-                    }
-                }
-            };
-
-            // Single Word Modal Recognition
-            modalRecognition = new SpeechRecognition();
-            modalRecognition.continuous = false;
-            modalRecognition.interimResults = false;
-            modalRecognition.lang = 'ar-SA';
-
-            modalRecognition.onstart = function() {
-                isModalRecording = true;
-                $('#btnModalRecord').addClass('pulse-recording').css('background', '#ef4444');
-                $('#modalMicIcon').removeClass('bi-mic-fill').addClass('bi-stop-fill');
-                $('#modalMicStatus').text('Listening for this single word...');
-                $('#modalRecognizedWord').text('');
-            };
-
-            modalRecognition.onresult = function(event) {
-                var spokenWord = event.results[0][0].transcript.trim();
-                $('#modalRecognizedWord').text(spokenWord);
-                submitSingleWordPractice(spokenWord);
-            };
-
-            modalRecognition.onerror = function(event) {
-                console.log('Modal speech error:', event.error);
-                stopModalRecordingUI();
-                $('#modalMicStatus').text('Could not hear word. Click mic and try again.');
-            };
-
-            modalRecognition.onend = function() {
-                stopModalRecordingUI();
-            };
-        } else {
-            console.log('Web Speech API not supported in this browser.');
-            $('#speechStatusIndicator').html('<i class="bi bi-exclamation-circle text-warning me-1"></i> Speech API Not Supported').addClass('bg-warning-subtle text-warning');
-            $('#micStatusDesc').text('Voice recognition requires Chrome/Edge/Safari. You can test using manual Arabic input.');
-            $('#manualInputContainer').removeClass('d-none');
-        }
-
-        // Start a Practice Session on page load
-        startNewSession();
-
-        // Load the initial verse
-        loadAyahData(currentSurah, currentAyah);
-
-        // Surah or Ayah change
-        $('#btnLoadAyah').on('click', function() {
-            currentSurah = parseInt($('#selectSurah').val());
-            currentAyah = parseInt($('#selectAyah').val()) || 1;
-            loadAyahData(currentSurah, currentAyah);
-        });
-
-        // Record Button click
-        $('#btnRecord').on('click', function() {
-            if (!recognition) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) {
+                alert('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari, or test with the manual Arabic input.');
                 $('#manualInputContainer').removeClass('d-none');
-                $('#manualArabicInput').focus();
                 return;
             }
 
-            if (!isRecording) {
+            // Clean up any stale instances
+            if (activeRecognition) {
+                try { activeRecognition.abort(); } catch(e) {}
+                activeRecognition = null;
+            }
+
+            // Function to launch the instance after permissions
+            function launchInstance() {
                 try {
-                    recognition.start();
+                    activeRecognition = new SpeechRec();
+                    activeRecognition.continuous = true;
+                    activeRecognition.interimResults = true;
+                    activeRecognition.lang = 'ar-SA';
+                    activeRecognition.maxAlternatives = 1;
+
+                    transcribedText = "";
+                    var accumulatedFinal = "";
+
+                    activeRecognition.onstart = function() {
+                        isListening = true;
+                        $('#btnRecord').addClass('pulse-recording').css('background', '#ef4444');
+                        $('#recordingRipple').removeClass('d-none');
+                        $('#micIcon').removeClass('bi-mic-fill').addClass('bi-stop-fill');
+                        $('#micStatusHeading').text('Listening to your recitation...');
+                        $('#micStatusDesc').html('<span class="text-success fw-bold"><i class="bi bi-mic"></i> Reciting...</span> Will stop automatically when you complete the Ayah.');
+                        $('#speechStatusIndicator').html('<i class="bi bi-record-circle text-danger me-1"></i> Recording (ar-SA)...').removeClass('bg-light text-muted bg-success-subtle text-success').addClass('bg-danger-subtle text-danger');
+                        transcribedText = "";
+                        $('#liveTranscript').text('Listening in Arabic... Say the verse now...').removeClass('text-danger text-muted').addClass('text-dark');
+                    };
+
+                    activeRecognition.onresult = function(event) {
+                        var interim = '';
+                        for (var i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                accumulatedFinal += ' ' + event.results[i][0].transcript;
+                            } else {
+                                interim += ' ' + event.results[i][0].transcript;
+                            }
+                        }
+                        transcribedText = (accumulatedFinal + ' ' + interim).trim();
+                        $('#liveTranscript').text(transcribedText).addClass('text-dark fw-bold font-arabic fs-5');
+
+                        // Check if Ayah recitation has finished to automatically stop!
+                        checkAyahCompletion(transcribedText);
+                    };
+
+                    activeRecognition.onerror = function(event) {
+                        console.warn('Speech error:', event.error);
+                        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                            $('#speechStatusIndicator').html('<i class="bi bi-slash-circle text-danger me-1"></i> Mic Denied').addClass('bg-danger-subtle text-danger');
+                            alert('Microphone access is not allowed. Please allow microphone permissions in your browser or use the manual Arabic text input.');
+                            $('#manualInputContainer').removeClass('d-none');
+                            stopRecitationListening(false);
+                        } else if (event.error === 'no-speech') {
+                            // Waiting for speech, keep open
+                        }
+                    };
+
+                    activeRecognition.onend = function() {
+                        if (isListening) {
+                            stopRecitationListening(true);
+                        }
+                    };
+
+                    activeRecognition.start();
                 } catch(e) {
-                    console.log('Start error:', e);
-                }
-            } else {
-                recognition.stop();
-                stopRecordingUI();
-                if (transcribedText.trim().length > 0) {
-                    submitRecitation(transcribedText);
+                    console.error("Speech start error:", e);
+                    stopRecitationListening(false);
+                    alert("Could not start microphone: " + e.message);
                 }
             }
-        });
 
-        function stopRecordingUI() {
-            isRecording = false;
+            // Probe permissions if possible to avoid silent failures
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                    stream.getTracks().forEach(t => t.stop());
+                    launchInstance();
+                }).catch(function(err) {
+                    console.warn("GetUserMedia prompt warning:", err);
+                    launchInstance();
+                });
+            } else {
+                launchInstance();
+            }
+        }
+
+        // Intelligent Auto-Stop: detects when the user finishes reciting the Ayah
+        function checkAyahCompletion(currentSpokenText) {
+            if (!currentSpokenText || currentSpokenText.trim().length === 0) return;
+
+            clearTimeout(autoStopAyahTimer);
+            clearTimeout(silenceTimer);
+
+            var spokenTokens = normalizeArabicText(currentSpokenText).split(/\s+/).filter(Boolean);
+            var targetTokens = targetWordsClean.length > 0
+                ? targetWordsClean
+                : normalizeArabicText($('#targetArabicText').text()).split(/\s+/).filter(Boolean);
+
+            var targetCount = targetTokens.length;
+            var spokenCount = spokenTokens.length;
+
+            // 1. Check if the final target word was spoken
+            var reachedLastTargetWord = false;
+            if (targetCount > 0 && spokenCount > 0) {
+                var lastTargetWord = targetTokens[targetCount - 1];
+                for (var k = Math.max(0, spokenCount - 3); k < spokenCount; k++) {
+                    if (wordSimilarityJS(spokenTokens[k], lastTargetWord) >= 0.70) {
+                        reachedLastTargetWord = true;
+                        break;
+                    }
+                }
+            }
+
+            var wordCountMet = (targetCount > 0 && spokenCount >= targetCount);
+
+            if (reachedLastTargetWord || wordCountMet) {
+                // User reached the end of the Ayah!
+                $('#speechStatusIndicator').html('<i class="bi bi-check2-circle text-success me-1"></i> Ayah completed! Auto-analyzing...').removeClass('bg-danger-subtle text-danger').addClass('bg-success-subtle text-success');
+                $('#micStatusHeading').text('Ayah Recited! Processing...');
+                $('#micStatusDesc').html('<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> Verse finished. Evaluating recitation...</span>');
+
+                // Buffer of 750ms to catch any final waqf/vowel, then auto-stop
+                autoStopAyahTimer = setTimeout(function() {
+                    if (isListening) {
+                        stopRecitationListening(true);
+                    }
+                }, 750);
+            } else if (spokenCount >= 1) {
+                // 2. Silence detection: if user pauses for 2.3 seconds after speaking at least 1 word
+                silenceTimer = setTimeout(function() {
+                    if (isListening) {
+                        $('#speechStatusIndicator').html('<i class="bi bi-hourglass text-success me-1"></i> Recitation pause. Analyzing...').removeClass('bg-danger-subtle text-danger').addClass('bg-success-subtle text-success');
+                        stopRecitationListening(true);
+                    }
+                }, 2300);
+            }
+        }
+
+        // Stop Recitation and Trigger Submission
+        function stopRecitationListening(shouldSubmit) {
+            clearTimeout(autoStopAyahTimer);
+            clearTimeout(silenceTimer);
+
+            if (!isListening && !activeRecognition) return;
+
+            isListening = false;
+            var textToAnalyze = transcribedText ? transcribedText.trim() : "";
+
+            if (activeRecognition) {
+                try {
+                    activeRecognition.stop();
+                } catch(e) {}
+                activeRecognition = null;
+            }
+
+            // Update UI buttons and badges
             $('#btnRecord').removeClass('pulse-recording').css('background', 'var(--emerald-gradient)');
             $('#recordingRipple').addClass('d-none');
             $('#micIcon').removeClass('bi-stop-fill').addClass('bi-mic-fill');
-            $('#speechStatusIndicator').html('<i class="bi bi-hourglass-split text-emerald me-1"></i> Analyzing Audio...').removeClass('bg-danger-subtle text-danger').addClass('bg-light text-muted');
-            $('#micStatusHeading').text('Analyzing your recitation...');
-            $('#micStatusDesc').text('Computing phonetic alignment and Tajweed rules with the Quranic text...');
+
+            if (shouldSubmit && textToAnalyze.length > 0) {
+                $('#speechStatusIndicator').html('<i class="bi bi-hourglass-split text-emerald me-1"></i> Analyzing Audio...').removeClass('bg-danger-subtle text-danger bg-success-subtle text-success').addClass('bg-light text-muted');
+                $('#micStatusHeading').text('Analyzing your recitation...');
+                $('#micStatusDesc').text('Computing phonetic alignment and Tajweed rules with the Quranic text...');
+                submitRecitation(textToAnalyze);
+            } else {
+                $('#speechStatusIndicator').html('<i class="bi bi-mic-fill text-secondary me-1"></i> Mic Ready (ar-SA)').removeClass('bg-danger-subtle text-danger bg-success-subtle text-success').addClass('bg-light text-muted');
+                $('#micStatusHeading').text('Click Microphone to Recite');
+                $('#micStatusDesc').text('Recite clearly in Arabic. The AI automatically detects when you complete the Ayah.');
+                if (shouldSubmit && textToAnalyze.length === 0) {
+                    $('#liveTranscript').text('No speech recognized. Please verify your mic and recite again.').addClass('text-danger');
+                }
+            }
         }
+
+        // Record Button click - toggle on/off
+        $('#btnRecord').off('click').on('click', function(e) {
+            e.preventDefault();
+            if (!isListening) {
+                startRecitationListening();
+            } else {
+                stopRecitationListening(true);
+            }
+        });
 
         function stopModalRecordingUI() {
             isModalRecording = false;
@@ -654,6 +757,10 @@
                         refAudioUrl = "";
                     }
 
+                    // Store target text and words for auto-stop completion matching
+                    targetVerseText = res.ayah.text;
+                    targetWordsClean = normalizeArabicText(res.ayah.text).split(/\s+/).filter(Boolean);
+
                     // Store words
                     currentAyahWords = res.words && res.words.length > 0 ? res.words : [];
                     renderInteractiveVerse(res.ayah.text, currentAyahWords);
@@ -760,20 +867,73 @@
             $('#modalResultBox').addClass('d-none').html('');
             $('#modalMicStatus').text('Click microphone and recite this word');
 
-            $('#btnModalPlayQari').off('click').on('click', function() {
-                if (audioUrl) {
-                    playWordAudioUrl(audioUrl);
-                } else if (refAudioUrl) {
-                    playWordAudioUrl(refAudioUrl);
+            // Wire up modal mic button with fresh instance
+            $('#btnModalRecord').off('click').on('click', function(e) {
+                e.preventDefault();
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    alert('Speech recognition is not supported in this browser.');
+                    return;
+                }
+
+                if (isModalRecording) {
+                    if (activeModalRecognition) {
+                        try { activeModalRecognition.stop(); } catch(e) {}
+                    }
+                    stopModalRecordingUI();
+                    return;
+                }
+
+                try {
+                    if (activeModalRecognition) {
+                        try { activeModalRecognition.abort(); } catch(e) {}
+                    }
+
+                    activeModalRecognition = new SpeechRec();
+                    activeModalRecognition.continuous = false;
+                    activeModalRecognition.interimResults = false;
+                    activeModalRecognition.lang = 'ar-SA';
+                    activeModalRecognition.maxAlternatives = 1;
+
+                    activeModalRecognition.onstart = function() {
+                        isModalRecording = true;
+                        $('#btnModalRecord').addClass('pulse-recording').css('background', '#ef4444');
+                        $('#modalMicIcon').removeClass('bi-mic-fill').addClass('bi-stop-fill');
+                        $('#modalMicStatus').text('Listening for this single word...');
+                        $('#modalRecognizedWord').text('');
+                        $('#modalResultBox').addClass('d-none');
+                    };
+
+                    activeModalRecognition.onresult = function(event) {
+                        var spokenWord = event.results[0][0].transcript.trim();
+                        $('#modalRecognizedWord').text(spokenWord);
+                        stopModalRecordingUI();
+                        submitSingleWordPractice(spokenWord);
+                    };
+
+                    activeModalRecognition.onerror = function(event) {
+                        console.warn('Modal speech error:', event.error);
+                        stopModalRecordingUI();
+                        $('#modalMicStatus').text('Could not hear word. Click mic and try again.');
+                    };
+
+                    activeModalRecognition.onend = function() {
+                        stopModalRecordingUI();
+                    };
+
+                    activeModalRecognition.start();
+                } catch(err) {
+                    console.error("Modal start error:", err);
+                    stopModalRecordingUI();
                 }
             });
 
-            $('#btnModalSpeakAdvice').off('click').on('click', function() {
-                var lang = $('#teacherVoiceLanguage').val();
-                var text = (lang === 'ur')
-                    ? "لفظ " + targetWord + " کا تلفظ غور سے ادا کریں۔"
-                    : "Focus on pronouncing " + targetWord + " with proper makhraj.";
-                speakTeacherExplanation(text, lang);
+            $('#singleWordModal').off('hidden.bs.modal').on('hidden.bs.modal', function() {
+                if (activeModalRecognition) {
+                    try { activeModalRecognition.abort(); } catch(e) {}
+                    activeModalRecognition = null;
+                }
+                stopModalRecordingUI();
             });
 
             singleWordModal.show();
@@ -1148,6 +1308,11 @@
         }
 
         function resetAssessmentUI() {
+            clearTimeout(autoStopAyahTimer);
+            clearTimeout(silenceTimer);
+            if (isListening) {
+                stopRecitationListening(false);
+            }
             $('#scoreDisplay').text('--%').removeClass('text-success text-warning text-danger').addClass('text-emerald');
             $('#scoreProgressBar').css('width', '0%');
             $('#resultLabel').text('Awaiting Recitation').removeClass('text-success text-warning text-danger');
@@ -1155,7 +1320,7 @@
             $('#mistakesContainer').html('').addClass('d-none');
             $('#feedbackMessage').text('Press the microphone button and recite the Holy verse clearly. Listen to the reference Qari first if needed.');
             $('#micStatusHeading').text('Click Microphone to Recite');
-            $('#micStatusDesc').text('Recite clearly in Arabic. Speak naturally close to your device.');
+            $('#micStatusDesc').text('Recite clearly in Arabic. The AI automatically detects when you complete the Ayah.');
             $('#speechStatusIndicator').html('<i class="bi bi-mic-fill text-secondary me-1"></i> Mic Ready (ar-SA)').removeClass('bg-danger-subtle bg-success-subtle bg-warning-subtle text-danger text-success text-warning').addClass('bg-light text-muted');
             $('.quran-word-item').removeClass('qword-matched qword-uncertain qword-error qword-selected');
             $('#selectedWordCard').addClass('d-none');

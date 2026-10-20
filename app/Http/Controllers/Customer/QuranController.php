@@ -42,6 +42,8 @@ class QuranController extends Controller
      */
     public function show(Request $request, int $surahNumber)
     {
+        @set_time_limit(180);
+
         if ($surahNumber < 1 || $surahNumber > 114) {
             abort(404, 'Surah not found.');
         }
@@ -52,21 +54,40 @@ class QuranController extends Controller
             ['preferred_reciter' => 'ar.alafasy', 'preferred_translation' => 'en.asad']
         );
 
-        // Get Arabic text
-        $surah = $this->quranApi->getSurah($surahNumber);
+        $translationEdition = $prefs->preferred_translation ?: 'en.asad';
+        $reciterEdition = $prefs->preferred_reciter ?: 'ar.alafasy';
 
-        // Get translation
-        $translation = null;
-        if ($prefs->show_translation) {
-            $translation = $this->quranApi->getSurahWithTranslation($surahNumber, $prefs->preferred_translation);
+        // Load Arabic text and translation in a single combined API call to prevent timeout on large surahs
+        $multiEditions = $this->quranApi->getSurahWithEditions($surahNumber, ['quran-uthmani', $translationEdition]);
+
+        if (is_array($multiEditions) && count($multiEditions) >= 2) {
+            $surah = $multiEditions[0];
+            $translation = $prefs->show_translation ? $multiEditions[1] : null;
+        } else {
+            // Fallback to individual cached requests if multi-edition endpoint is unreachable
+            $surah = $this->quranApi->getSurah($surahNumber);
+            $translation = $prefs->show_translation ? $this->quranApi->getSurahWithTranslation($surahNumber, $translationEdition) : null;
         }
-
-        // Get audio edition
-        $audio = $this->quranApi->getSurahAudio($surahNumber, $prefs->preferred_reciter);
 
         if (!$surah) {
             return back()->with('error', 'Unable to load Surah data. Please try again.');
         }
+
+        // Build audio data directly using high-speed Islamic Network CDN URLs (0 network delay)
+        $audioAyahs = [];
+        if (isset($surah['ayahs']) && is_array($surah['ayahs'])) {
+            foreach ($surah['ayahs'] as $a) {
+                $audioAyahs[] = [
+                    'number' => $a['number'],
+                    'audio' => 'https://cdn.islamic.network/quran/audio/128/' . $reciterEdition . '/' . $a['number'] . '.mp3',
+                ];
+            }
+        }
+        $audio = [
+            'number' => $surahNumber,
+            'name' => $surah['name'] ?? '',
+            'ayahs' => $audioAyahs,
+        ];
 
         // Get surahs for navigation
         $surahs = $this->quranApi->getSurahs();

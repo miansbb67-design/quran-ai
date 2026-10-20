@@ -96,6 +96,21 @@ class QuranAiPlatformTest extends TestCase
     }
 
     /**
+     * Test that an authenticated user can access Surah 2 (Al-Baqarah) without timeout.
+     */
+    public function test_user_can_access_surah_baqarah(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($user)->get('/quran/2');
+        $response->assertStatus(200);
+        $response->assertSee('Al-Baqara');
+    }
+
+    /**
      * Test that an authenticated user can toggle verse bookmarks.
      */
     public function test_user_can_toggle_bookmark(): void

@@ -24,7 +24,17 @@ class QuranApiService
     public function getSurah(int $surahNumber, string $edition = 'quran-uthmani'): ?array
     {
         $cacheKey = "surah_{$surahNumber}_{$edition}";
-        return $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/{$edition}", 86400);
+        return $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/{$edition}", 2592000);
+    }
+
+    /**
+     * Get Surah with multiple editions (Arabic text + translation) in a single API call.
+     */
+    public function getSurahWithEditions(int $surahNumber, array $editions = ['quran-uthmani', 'en.asad']): ?array
+    {
+        $editionStr = implode(',', $editions);
+        $cacheKey = "surah_multi_{$surahNumber}_" . md5($editionStr);
+        return $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/editions/{$editionStr}", 2592000);
     }
 
     /**
@@ -170,8 +180,8 @@ class QuranApiService
         $url = $this->baseUrl . $endpoint;
 
         try {
-            $response = Http::timeout(15)
-                ->retry(2, 1000)
+            $response = Http::timeout(45)
+                ->retry(2, 500)
                 ->get($url);
 
             $responseTime = (int) ((microtime(true) - $startTime) * 1000);
