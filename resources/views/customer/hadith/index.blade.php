@@ -30,7 +30,7 @@
         <div class="card card-glass border-0 p-4 mb-4 shadow-sm" style="border-left: 5px solid #10b981 !important; background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,253,244,0.85) 100%);">
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-emerald text-white rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm">
+                    <span class="badge rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm" style="background: #065f46; color: #ffffff;">
                         <i class="bi bi-star-fill text-gold"></i> Today's Featured Hadith &bull; حدیثِ آج کا
                     </span>
                     <span class="badge bg-gold text-dark rounded-pill px-2 py-1 fw-semibold small">

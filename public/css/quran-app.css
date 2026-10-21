@@ -110,6 +110,11 @@ body {
     border-radius: 50rem;
 }
 
+.bg-emerald {
+    background-color: #065f46 !important;
+    color: #ffffff !important;
+}
+
 /* Buttons */
 .btn-emerald {
     background: var(--emerald-gradient);
