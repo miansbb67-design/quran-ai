@@ -65,14 +65,10 @@
                     <span>My Bookmarks</span>
                 </a>
 
-                <hr class="my-3 text-muted">
-
-                @if(Auth::user()->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-link text-warning fw-semibold">
-                        <i class="bi bi-shield-lock-fill text-warning"></i>
-                        <span>Admin Console</span>
-                    </a>
-                @endif
+                <a href="{{ route('hadith.index') }}" class="sidebar-nav-link {{ request()->routeIs('hadith.*') ? 'active' : '' }}">
+                    <i class="bi bi-book-half"></i>
+                    <span>Daily Hadith</span>
+                </a>
 
                 <a href="{{ route('profile.edit') }}" class="sidebar-nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                     <i class="bi bi-person-circle"></i>
@@ -201,13 +197,10 @@
                             <i class="bi bi-bookmark-star-fill"></i>
                             <span>My Bookmarks</span>
                         </a>
-                        @if(Auth::user()->isAdmin())
-                            <hr>
-                            <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-link text-warning fw-semibold">
-                                <i class="bi bi-shield-lock-fill text-warning"></i>
-                                <span>Admin Console</span>
-                            </a>
-                        @endif
+                        <a href="{{ route('hadith.index') }}" class="sidebar-nav-link {{ request()->routeIs('hadith.*') ? 'active' : '' }}">
+                            <i class="bi bi-book-half"></i>
+                            <span>Daily Hadith</span>
+                        </a>
                     </nav>
                 </div>
             </div>

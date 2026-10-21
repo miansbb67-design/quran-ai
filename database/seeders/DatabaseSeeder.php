@@ -258,5 +258,8 @@ class DatabaseSeeder extends Seeder
             ],
             'feedback_message' => 'Excellent recitation! All words pronounced with high accuracy.',
         ]);
+
+        // 10. Seed Authentic Daily Hadiths
+        $this->call(HadithSeeder::class);
     }
 }

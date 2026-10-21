@@ -52,6 +52,12 @@ class DashboardController extends Controller
         $totalLearningMinutes = intval(PracticeSession::where('user_id', $user->id)
             ->sum('duration_seconds') / 60);
 
+        // Islamic (Hijri) Calendar date
+        $hijriDate = \App\Services\IslamicCalendarService::getHijriDate();
+
+        // Daily Hadith (changes every single day)
+        $dailyHadith = (new \App\Services\HadithService())->getDailyHadith();
+
         return view('customer.dashboard', compact(
             'readingProgress',
             'todayGoal',
@@ -59,7 +65,9 @@ class DashboardController extends Controller
             'memStats',
             'bookmarksCount',
             'announcements',
-            'totalLearningMinutes'
+            'totalLearningMinutes',
+            'hijriDate',
+            'dailyHadith'
         ));
     }
 }

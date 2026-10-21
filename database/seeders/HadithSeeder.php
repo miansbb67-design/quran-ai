@@ -1,0 +1,187 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Hadith;
+use Illuminate\Database\Seeder;
+
+class HadithSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $hadiths = [
+            [
+                'arabic_text' => 'خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ',
+                'english_translation' => 'The best among you are those who learn the Quran and teach it to others.',
+                'urdu_translation' => 'تم میں سے بہترین شخص وہ ہے جو قرآن سیکھے اور دوسروں کو سکھائے۔',
+                'narrator' => 'Uthman ibn Affan (RA)',
+                'source_book' => 'Sahih al-Bukhari 5027',
+                'chapter' => 'Virtues of the Quran',
+                'category' => 'quran',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'اقْرَءُوا الْقُرْآنَ فَإِنَّهُ يَأْتِي يَوْمَ الْقِيَامَةِ شَفِيعًا لِأَصْحَابِهِ',
+                'english_translation' => 'Recite the Quran, for it will come as an intercessor for its reciters on the Day of Resurrection.',
+                'urdu_translation' => 'قرآن پڑھا کرو، کیونکہ وہ قیامت کے دن اپنے پڑھنے والوں کی شفاعت کرے گا۔',
+                'narrator' => 'Abu Umamah Al-Bahili (RA)',
+                'source_book' => 'Sahih Muslim 804',
+                'chapter' => 'Virtues of Reciting Quran',
+                'category' => 'quran',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ',
+                'english_translation' => 'Whoever takes a path upon which he seeks knowledge, Allah will make easy for him the path to Paradise.',
+                'urdu_translation' => 'جو شخص علم کی تلاش میں کسی راستے پر چلے، اللہ تعالیٰ اس کے لیے جنت کا راستہ آسان فرما دیتا ہے۔',
+                'narrator' => 'Abu Hurairah (RA)',
+                'source_book' => 'Sahih Muslim 2699',
+                'chapter' => 'The Book of Knowledge',
+                'category' => 'knowledge',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'الْمَاهِرُ بِالْقُرْآنِ مَعَ السَّفَرَةِ الْكِرَامِ الْبَرَرَةِ، وَالَّذِي يَقْرَأُ الْقُرْآنَ وَيَتَتَعْتَعُ فِيهِ وَهُوَ عَلَيْهِ شَاقٌّ لَهُ أَجْرَانِ',
+                'english_translation' => 'The one who is proficient in the recitation of the Quran will be with the honorable and obedient scribes (angels), and he who recites the Quran and stammers in it, and it is difficult for him, will receive double reward.',
+                'urdu_translation' => 'قرآن کا ماہر معزز اور نیک فرشتوں کے ساتھ ہوگا، اور جو اٹک اٹک کر پڑھتا ہے اور اسے مشکل ہوتی ہے، اس کے لیے دوہرا اجر ہے۔',
+                'narrator' => 'Aisha (RA)',
+                'source_book' => 'Sahih al-Bukhari 4937',
+                'chapter' => 'Virtues of the Quran',
+                'category' => 'quran',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى',
+                'english_translation' => 'Actions are judged by intentions, and every person will get what they intended.',
+                'urdu_translation' => 'اعمال کا دارومدار نیتوں پر ہے، اور ہر انسان کو وہی ملے گا جس کی اس نے نیت کی۔',
+                'narrator' => 'Umar ibn al-Khattab (RA)',
+                'source_book' => 'Sahih al-Bukhari 1',
+                'chapter' => 'Revelation',
+                'category' => 'character',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'إِنَّ مِنْ أَحَبِّكُمْ إِلَيَّ وَأَقْرَبِكُمْ مِنِّي مَجْلِسًا يَوْمَ الْقِيَامَةِ أَحَاسِنَكُمْ أَخْلاَقًا',
+                'english_translation' => 'The most beloved of you to me and the closest of you to my gathering on the Day of Resurrection are those of you with the best character.',
+                'urdu_translation' => 'قیامت کے دن تم میں سے مجھے سب سے زیادہ محبوب اور میرے سب سے قریب بیٹھنے والا وہ شخص ہوگا جس کے اخلاق سب سے اچھے ہوں۔',
+                'narrator' => 'Jabir ibn Abdullah (RA)',
+                'source_book' => 'Jami at-Tirmidhi 2018',
+                'chapter' => 'Righteousness and Relations',
+                'category' => 'character',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'مَنْ قَرَأَ حَرْفًا مِنْ كِتَابِ اللَّهِ فَلَهُ بِهِ حَسَنَةٌ، وَالْحَسَنَةُ بِعَشْرِ أَمْثَالِهَا',
+                'english_translation' => 'Whoever recites a letter from the Book of Allah, he will receive one good deed for it, and ten good deeds like it.',
+                'urdu_translation' => 'جس نے اللہ کی کتاب کا ایک حرف پڑھا اس کے لیے ایک نیکی ہے، اور ایک نیکی کا بدلہ دس گنا ہے۔',
+                'narrator' => 'Abdullah ibn Masud (RA)',
+                'source_book' => 'Jami at-Tirmidhi 2910',
+                'chapter' => 'Virtues of the Quran',
+                'category' => 'quran',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'عَجَبًا لِأَمْرِ الْمُؤْمِنِ إِنَّ أَمْرَهُ كُلَّهُ خَيْرٌ، وَلَيْسَ ذَاكَ لِأَحَدٍ إِلَّا لِلْمُؤْمِنِ',
+                'english_translation' => 'How wonderful is the affair of the believer, for his affairs are all good, and this applies to no one but the believer.',
+                'urdu_translation' => 'مومن کا معاملہ بھی خوب ہے! اس کے ہر کام میں خیر ہے، اور یہ بات مومن کے سوا کسی کو حاصل نہیں۔',
+                'narrator' => 'Suhayb ibn Sinan (RA)',
+                'source_book' => 'Sahih Muslim 2999',
+                'chapter' => 'Patience and Gratitude',
+                'category' => 'patience',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ',
+                'english_translation' => 'The deeds most beloved to Allah are those done regularly, even if they are small.',
+                'urdu_translation' => 'اللہ تعالیٰ کو سب سے زیادہ پسندیدہ وہ عمل ہے جو ہمیشہ کیا جائے، اگرچہ تھوڑا ہی ہو۔',
+                'narrator' => 'Aisha (RA)',
+                'source_book' => 'Sahih Muslim 783',
+                'chapter' => 'Steadfastness',
+                'category' => 'character',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'مَنْ كَانَ فِي حَاجَةِ أَخِيهِ كَانَ اللَّهُ فِي حَاجَتِهِ، وَمَنْ فَرَّجَ عَنْ مُسْلِمٍ كُرْبَةً فَرَّجَ اللَّهُ عَنْهُ كُرْبَةً مِنْ كُرُبَاتِ يَوْمِ الْقِيَامَةِ',
+                'english_translation' => 'Whoever fulfills the needs of his brother, Allah will fulfill his needs; and whoever relieves a Muslim of a hardship, Allah will relieve him of a hardship on the Day of Resurrection.',
+                'urdu_translation' => 'جو اپنے مسلمان بھائی کی ضرورت پوری کرے گا، اللہ اس کی ضرورت پوری فرمائے گا، اور جو کسی کی مصیبت دور کرے گا، اللہ قیامت کے دن اس کی مصیبت دور فرمائے گا۔',
+                'narrator' => 'Abdullah ibn Umar (RA)',
+                'source_book' => 'Sahih al-Bukhari 2442',
+                'chapter' => 'Oppression',
+                'category' => 'kindness',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'الدُّعَاءُ هُوَ الْعِبَادَةُ',
+                'english_translation' => 'Supplication (Dua) is the very essence of worship.',
+                'urdu_translation' => 'دعا ہی اصل عبادت ہے۔',
+                'narrator' => 'An-Nu\'man ibn Bashir (RA)',
+                'source_book' => 'Sunan Abi Dawud 1479',
+                'chapter' => 'Prayer & Supplication',
+                'category' => 'prayer',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ',
+                'english_translation' => 'Smiling in the face of your brother is an act of charity.',
+                'urdu_translation' => 'اپنے بھائی کے سامنے مسکرا دینا بھی تمہارے لیے صدقہ ہے۔',
+                'narrator' => 'Abu Dharr al-Ghifari (RA)',
+                'source_book' => 'Jami at-Tirmidhi 1956',
+                'chapter' => 'Righteousness',
+                'category' => 'kindness',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'يُقَالُ لِصَاحِبِ الْقُرْآنِ: اقْرَأْ وَارْتَقِ وَرَتِّلْ كَمَا كُنْتَ تُرَتِّلُ فِي الدُّنْيَا، فَإِنَّ مَنْزِلَتَكَ عِنْدَ آخِرِ آيَةٍ تَقْرَؤُهَا',
+                'english_translation' => 'It will be said to the companion of the Quran: Recite and ascend, and recite carefully as you recited in the world, for your station will be at the last verse you recite.',
+                'urdu_translation' => 'صاحبِ قرآن سے کہا جائے گا: پڑھتا جا اور جنت کے درجات چڑھتا جا، اور ٹھہر ٹھہر کر پڑھ جیسا کہ تو دنیا میں پڑھتا تھا، تیرا درجہ وہی ہے جہاں تیری آخری آیت پر تلاوت ختم ہوگی۔',
+                'narrator' => 'Abdullah ibn Amr (RA)',
+                'source_book' => 'Sunan Abi Dawud 1464',
+                'chapter' => 'Virtues of the Quran',
+                'category' => 'quran',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+            [
+                'arabic_text' => 'لَيْسَ الشَّدِيدُ بِالصُّرَعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ',
+                'english_translation' => 'The strong person is not the one who overcomes people in wrestling; rather, the strong person is the one who controls himself when angry.',
+                'urdu_translation' => 'طاقتور وہ نہیں جو پہلوانی میں پچھاڑ دے، بلکہ اصل طاقتور وہ ہے جو غصے کے وقت اپنے نفس پر قابو رکھے۔',
+                'narrator' => 'Abu Hurairah (RA)',
+                'source_book' => 'Sahih al-Bukhari 6114',
+                'chapter' => 'Good Manners',
+                'category' => 'character',
+                'grade' => 'Sahih',
+                'is_featured' => false,
+            ],
+            [
+                'arabic_text' => 'مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ',
+                'english_translation' => 'Whomever Allah desires good for, He grants him deep understanding of the religion.',
+                'urdu_translation' => 'اللہ تعالیٰ جس کے ساتھ بھلائی کا ارادہ فرماتا ہے، اسے دین کی گہری سمجھ عطا فرما دیتا ہے۔',
+                'narrator' => 'Mu\'awiyah (RA)',
+                'source_book' => 'Sahih al-Bukhari 71',
+                'chapter' => 'Knowledge',
+                'category' => 'knowledge',
+                'grade' => 'Sahih',
+                'is_featured' => true,
+            ],
+        ];
+
+        foreach ($hadiths as $item) {
+            Hadith::updateOrCreate(
+                ['source_book' => $item['source_book']],
+                $item
+            );
+        }
+    }
+}

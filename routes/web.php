@@ -8,6 +8,7 @@ use App\Http\Controllers\Customer\QuranController;
 use App\Http\Controllers\Customer\AITeacherController;
 use App\Http\Controllers\Customer\HifzController;
 use App\Http\Controllers\Customer\ProgressController;
+use App\Http\Controllers\Customer\HadithController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ContentController as AdminContentController;
@@ -66,6 +67,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', [ProgressController::class, 'index'])->name('index');
         Route::get('/chart-data', [ProgressController::class, 'chartData'])->name('chart-data');
         Route::post('/delete-history', [ProgressController::class, 'deleteHistory'])->name('delete-history');
+    });
+
+    // Daily Hadith & Collection
+    Route::prefix('hadith')->name('hadith.')->group(function () {
+        Route::get('/', [HadithController::class, 'index'])->name('index');
+        Route::get('/{id}', [HadithController::class, 'show'])->name('show');
     });
 
     // Breeze Profile

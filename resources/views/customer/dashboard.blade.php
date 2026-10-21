@@ -133,6 +133,63 @@
                 </div>
             </div>
 
+            <!-- Daily Hadith (حدیثِ نبوی ﷺ) Box -->
+            @if(isset($dailyHadith) && $dailyHadith)
+                <div class="card card-glass border-0 p-4 mb-4 shadow-sm position-relative overflow-hidden" style="border-left: 4px solid #10b981 !important; background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,253,244,0.75) 100%);">
+                    <!-- Top Badge & Header -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-emerald-light text-emerald rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-quote fs-6"></i> Daily Hadith &bull; حدیثِ نبوی ﷺ
+                            </span>
+                            <span class="badge bg-gold-light text-dark rounded-pill px-2 py-1 small fw-semibold">
+                                {{ $dailyHadith->grade ?? 'Sahih' }}
+                            </span>
+                            @if($dailyHadith->chapter)
+                                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small d-none d-md-inline-block">
+                                    {{ $dailyHadith->chapter }}
+                                </span>
+                            @endif
+                        </div>
+                        <a href="{{ route('hadith.index') }}" class="btn btn-sm btn-outline-emerald rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-2xs">
+                            <span>Browse All Hadiths</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <!-- Arabic Hadith Text -->
+                    <div class="p-3 bg-white rounded-3 border mb-3 text-center position-relative shadow-2xs">
+                        <div class="font-arabic fs-3 text-emerald fw-bold mb-1" dir="rtl" style="line-height: 2;">
+                            « {{ $dailyHadith->arabic_text }} »
+                        </div>
+                    </div>
+
+                    <!-- Urdu Translation -->
+                    @if(!empty($dailyHadith->urdu_translation))
+                        <div class="p-2 px-3 bg-light rounded-3 mb-2 text-end text-dark font-urdu" dir="rtl" style="font-size: 1.05rem; line-height: 1.8;">
+                            {{ $dailyHadith->urdu_translation }}
+                        </div>
+                    @endif
+
+                    <!-- English Translation -->
+                    <div class="text-secondary small fst-italic mb-3 px-1 lh-base">
+                        "{{ $dailyHadith->english_translation }}"
+                    </div>
+
+                    <!-- Reference & Narrator Footer -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top text-muted small">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-check text-emerald"></i>
+                            <span class="fw-semibold text-dark">{{ $dailyHadith->narrator }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-book text-gold"></i>
+                            <span class="badge bg-white text-dark border">{{ $dailyHadith->source_book }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Recent Practice Attempts -->
             <div class="card card-glass border-0 p-4">
                 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -191,6 +248,57 @@
 
         <!-- Right: Quran Quick Access & Shortcuts -->
         <div class="col-lg-4">
+            <!-- Islamic (Hijri) Calendar Box -->
+            <div class="card border-0 p-3 mb-4 shadow-sm position-relative overflow-hidden" style="background: linear-gradient(135deg, #064e3b 0%, #046c4e 50%, #065f46 100%); border-radius: 1rem; color: #ffffff;">
+                <!-- Subtle corner radial glow -->
+                <div class="position-absolute" style="top: -40px; right: -40px; width: 120px; height: 120px; background: radial-gradient(circle, rgba(251, 191, 36, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+
+                <!-- Card Header -->
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-white border-opacity-10 position-relative" style="z-index: 1;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24;">
+                            <i class="bi bi-moon-stars-fill fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small lh-sm">Islamic Calendar</div>
+                            <div class="text-white-50 font-arabic" style="font-size: 0.8rem; line-height: 1;">التقويم الهجري</div>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill fw-semibold px-2 py-1" style="background-color: rgba(251, 191, 36, 0.18); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.35); font-size: 0.72rem;">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem; color: #34d399;"></i> Today
+                    </span>
+                </div>
+
+                <!-- Main Date Display Box -->
+                <div class="p-3 rounded-3 position-relative" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.12); z-index: 1;">
+                    <!-- Day Name Badge & Arabic Day -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge rounded-pill px-2 py-1" style="background: rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.72rem;">
+                            {{ $hijriDate['day_name_en'] ?? 'Wednesday' }}
+                        </span>
+                        <span class="font-arabic fw-semibold" style="color: #fbbf24; font-size: 1.05rem;">
+                            {{ $hijriDate['day_name_ar'] ?? 'الأَرْبِعَاء' }}
+                        </span>
+                    </div>
+
+                    <!-- Primary Arabic Hijri Date -->
+                    <div class="font-arabic fw-bold text-center py-2" dir="rtl" style="font-size: 1.85rem; color: #fef3c7; text-shadow: 0 2px 4px rgba(0,0,0,0.3); line-height: 1.3;">
+                        {{ $hijriDate['formatted_ar'] ?? '' }}
+                    </div>
+
+                    <!-- English Hijri Date -->
+                    <div class="text-center fw-bold small text-white pb-2 mb-2 border-bottom border-white border-opacity-10" style="letter-spacing: 0.3px;">
+                        {{ $hijriDate['formatted_en'] ?? '' }}
+                    </div>
+
+                    <!-- Gregorian Reference Footer -->
+                    <div class="d-flex align-items-center justify-content-center gap-1 text-white-50" style="font-size: 0.75rem;">
+                        <i class="bi bi-calendar3" style="color: #fbbf24;"></i>
+                        <span>{{ $hijriDate['gregorian_formatted'] ?? '' }}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Continue Reading Box -->
             <div class="card card-glass border-0 p-4 mb-4 bg-light border">
                 <h6 class="fw-bold text-emerald mb-3"><i class="bi bi-bookmark-check-fill text-gold me-2"></i>Current Reading Bookmark</h6>

@@ -48,6 +48,20 @@ class QuranAiPlatformTest extends TestCase
     }
 
     /**
+     * Test that student dashboard displays Islamic calendar date box.
+     */
+    public function test_student_dashboard_displays_islamic_calendar_box(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('Islamic Calendar');
+        $response->assertSee('التقويم الهجري');
+        $response->assertViewHas('hijriDate');
+    }
+
+    /**
      * Test that an admin user can access the admin panel.
      */
     public function test_admin_user_can_access_admin_panel(): void
@@ -334,5 +348,48 @@ class QuranAiPlatformTest extends TestCase
         $viewResponse->assertStatus(200);
         $viewResponse->assertViewHas('savedAyahNumber', 3);
         $viewResponse->assertSee('Resume Surah (Ayah 3)');
+    }
+
+    /**
+     * Test that student dashboard displays daily Hadith box with Arabic and translations.
+     */
+    public function test_student_dashboard_displays_daily_hadith(): void
+    {
+        $user = User::factory()->create();
+
+        // Seed Hadiths if not already present
+        (new \Database\Seeders\HadithSeeder())->run();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('Daily Hadith');
+        $response->assertSee('حدیثِ نبوی ﷺ');
+        $response->assertViewHas('dailyHadith');
+    }
+
+    /**
+     * Test that user can access the dedicated Hadith collection page, filter, and search.
+     */
+    public function test_user_can_access_and_filter_hadiths(): void
+    {
+        $user = User::factory()->create();
+
+        (new \Database\Seeders\HadithSeeder())->run();
+
+        // Index view
+        $response = $this->actingAs($user)->get('/hadith');
+        $response->assertStatus(200);
+        $response->assertSee('Daily Hadith &amp; Sunnah', false);
+        $response->assertSee('Sahih al-Bukhari');
+
+        // Filter by category
+        $filterResponse = $this->actingAs($user)->get('/hadith?category=quran');
+        $filterResponse->assertStatus(200);
+        $filterResponse->assertSee('خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ');
+
+        // Search query
+        $searchResponse = $this->actingAs($user)->get('/hadith?search=teach+it+to+others');
+        $searchResponse->assertStatus(200);
+        $searchResponse->assertSee('Sahih al-Bukhari 5027');
     }
 }
