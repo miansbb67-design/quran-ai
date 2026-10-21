@@ -33,7 +33,10 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 text-lg-end">
+            <div class="col-lg-4 text-lg-end d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a href="{{ route('sitemap') }}" target="_blank" class="btn btn-outline-emerald rounded-pill px-3 shadow-2xs" title="Open dynamic sitemap.xml">
+                    <i class="bi bi-diagram-3-fill text-emerald me-1"></i> XML Sitemap (114+ URLs)
+                </a>
                 <button type="button" class="btn btn-emerald rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#configGaModal">
                     <i class="bi bi-gear-fill me-1"></i> Configure GA4 / GTM
                 </button>

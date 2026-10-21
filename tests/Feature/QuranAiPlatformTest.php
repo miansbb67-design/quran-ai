@@ -464,5 +464,20 @@ class QuranAiPlatformTest extends TestCase
             'source_book' => 'Sunan Abi Dawud',
         ]);
     }
+
+    /**
+     * Test that XML sitemap returns valid XML with all 114 Surahs and Hadiths.
+     */
+    public function test_sitemap_xml_returns_valid_xml(): void
+    {
+        $response = $this->get('/sitemap.xml');
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/xml; charset=utf-8');
+        $response->assertSee('<urlset', false);
+        $response->assertSee('/quran/1', false);
+        $response->assertSee('/quran/114', false);
+        $response->assertSee('/hadith', false);
+        $response->assertSee('/ai-teacher', false);
+    }
 }
 
