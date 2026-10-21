@@ -41,7 +41,10 @@
             <label for="password" class="form-label small fw-semibold text-secondary">Password</label>
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                <input id="password" class="form-control border-start-0" type="password" name="password" required autocomplete="new-password" placeholder="At least 8 characters">
+                <input id="password" class="form-control border-start-0 border-end-0" type="password" name="password" required autocomplete="new-password" placeholder="At least 8 characters">
+                <button class="btn btn-light border border-start-0 text-muted" type="button" id="togglePassBtn" title="Toggle password visibility">
+                    <i class="bi bi-eye" id="togglePassIcon"></i>
+                </button>
             </div>
         </div>
 
@@ -50,7 +53,10 @@
             <label for="password_confirmation" class="form-label small fw-semibold text-secondary">Confirm Password</label>
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-shield-check text-muted"></i></span>
-                <input id="password_confirmation" class="form-control border-start-0" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-type password">
+                <input id="password_confirmation" class="form-control border-start-0 border-end-0" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-type password">
+                <button class="btn btn-light border border-start-0 text-muted" type="button" id="toggleConfirmPassBtn" title="Toggle password visibility">
+                    <i class="bi bi-eye" id="toggleConfirmPassIcon"></i>
+                </button>
             </div>
         </div>
 
@@ -63,4 +69,27 @@
             <a href="{{ route('login') }}" class="text-emerald fw-semibold text-decoration-none">Sign in here</a>
         </div>
     </form>
+
+    <script>
+        function setupToggle(btnId, inputId, iconId) {
+            var btn = document.getElementById(btnId);
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    var input = document.getElementById(inputId);
+                    var icon = document.getElementById(iconId);
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                });
+            }
+        }
+        setupToggle('togglePassBtn', 'password', 'togglePassIcon');
+        setupToggle('toggleConfirmPassBtn', 'password_confirmation', 'toggleConfirmPassIcon');
+    </script>
 </x-guest-layout>

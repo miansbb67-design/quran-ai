@@ -30,7 +30,7 @@
             <label for="email" class="form-label small fw-semibold text-secondary">Email Address</label>
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                <input id="email" class="form-control border-start-0" type="email" name="email" value="{{ old('email', 'student@quran-ai.com') }}" required autofocus autocomplete="username">
+                <input id="email" class="form-control border-start-0" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="name@example.com">
             </div>
         </div>
 
@@ -46,7 +46,10 @@
             </div>
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                <input id="password" class="form-control border-start-0" type="password" name="password" value="Password123!" required autocomplete="current-password">
+                <input id="password" class="form-control border-start-0 border-end-0" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                <button class="btn btn-light border border-start-0 text-muted" type="button" id="togglePasswordBtn" title="Show or hide password">
+                    <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                </button>
             </div>
         </div>
 
@@ -68,14 +71,11 @@
         </div>
     </form>
 
-    <!-- Demo Accounts Quick Fill Pill -->
+    <!-- Quick Demo Fill -->
     <div class="mt-4 pt-3 border-top text-center">
-        <small class="text-muted d-block mb-2">Seed Demo Accounts (Click to fill):</small>
-        <div class="d-flex justify-content-center gap-1 flex-wrap">
-            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2" style="font-size: 0.72rem;" onclick="fillDemo('student@quran-ai.com')">Student</button>
-            <button type="button" class="btn btn-sm btn-outline-warning text-dark rounded-pill py-0 px-2" style="font-size: 0.72rem;" onclick="fillDemo('admin@quran-ai.com')">Admin</button>
-            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2" style="font-size: 0.72rem;" onclick="fillDemo('owner@quran-ai.com')">Owner</button>
-        </div>
+        <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 text-secondary shadow-2xs" style="font-size: 0.76rem;" onclick="fillDemo('student@quran-ai.com')">
+            <i class="bi bi-key-fill text-gold me-1"></i> Quick Fill Demo Account
+        </button>
     </div>
 
     <script>
@@ -83,5 +83,19 @@
             document.getElementById('email').value = email;
             document.getElementById('password').value = 'Password123!';
         }
+
+        document.getElementById('togglePasswordBtn').addEventListener('click', function() {
+            var passInput = document.getElementById('password');
+            var passIcon = document.getElementById('togglePasswordIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.classList.remove('bi-eye');
+                passIcon.classList.add('bi-eye-slash');
+            } else {
+                passInput.type = 'password';
+                passIcon.classList.remove('bi-eye-slash');
+                passIcon.classList.add('bi-eye');
+            }
+        });
     </script>
 </x-guest-layout>

@@ -14,7 +14,7 @@
     <!-- Custom Design System -->
     <link rel="stylesheet" href="{{ asset('css/quran-app.css') }}">
 </head>
-<body class="bg-sand min-vh-100 d-flex flex-column justify-content-center py-5">
+<body class="min-vh-100 d-flex flex-column justify-content-center py-5" style="background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, #f8fafc 75%);">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5 col-xl-4">
@@ -32,7 +32,7 @@
                 </div>
 
                 <!-- Auth Card -->
-                <div class="card card-glass border-0 shadow-sm p-4 p-md-5 rounded-4 bg-white">
+                <div class="card card-glass border-0 shadow-sm p-4 p-md-5 bg-white" style="border-top: 4px solid #10b981 !important; overflow: hidden; border-radius: 1.25rem !important; box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;">
                     {{ $slot }}
                 </div>
 
