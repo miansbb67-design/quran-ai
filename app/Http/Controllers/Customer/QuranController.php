@@ -107,10 +107,14 @@ class QuranController extends Controller
             ['user_id' => $user->id],
             ['last_surah_number' => $surahNumber, 'last_ayah_number' => 1]
         );
+        $savedAyahNumber = ($progress->last_surah_number == $surahNumber && $progress->last_ayah_number > 0)
+            ? (int) $progress->last_ayah_number
+            : 1;
+
         $progress->last_surah_number = $surahNumber;
         $progress->updateStreak();
 
-        return view('customer.quran.show', compact('surah', 'translation', 'audio', 'surahs', 'bookmarks', 'prefs', 'surahNumber'));
+        return view('customer.quran.show', compact('surah', 'translation', 'audio', 'surahs', 'bookmarks', 'prefs', 'surahNumber', 'savedAyahNumber'));
     }
 
     /**

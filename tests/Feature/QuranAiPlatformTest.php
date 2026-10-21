@@ -306,4 +306,33 @@ class QuranAiPlatformTest extends TestCase
         $this->assertEquals('ur', \App\Models\SiteSetting::get('teacher_default_language'));
         $this->assertEquals('128', \App\Models\SiteSetting::get('audio_quality'));
     }
+
+    /**
+     * Test that user reading/listening progress accurately records stopped Ayah and provides it to the view.
+     */
+    public function test_user_progress_remembers_stopped_ayah_and_resumes(): void
+    {
+        $user = User::factory()->create();
+
+        // 1. Send progress update for Surah 2, Ayah 3 (where playback was stopped)
+        $response = $this->actingAs($user)->postJson('/quran/progress', [
+            'surah_number' => 2,
+            'ayah_number' => 3,
+        ]);
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        // Verify database persistence
+        $this->assertDatabaseHas('reading_progress', [
+            'user_id' => $user->id,
+            'last_surah_number' => 2,
+            'last_ayah_number' => 3,
+        ]);
+
+        // 2. Access Surah 2 reader page and verify savedAyahNumber (3) is provided to view
+        $viewResponse = $this->actingAs($user)->get('/quran/2');
+        $viewResponse->assertStatus(200);
+        $viewResponse->assertViewHas('savedAyahNumber', 3);
+        $viewResponse->assertSee('Resume Surah (Ayah 3)');
+    }
 }

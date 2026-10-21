@@ -42,11 +42,16 @@
                     <button type="button" class="btn btn-light rounded-pill" id="fontIncrease" title="Increase font size">A+</button>
                 </div>
 
-                <!-- Continuous Play All Audio -->
-                <button type="button" id="btnPlayFullSurah" class="btn btn-sm btn-gold rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1">
-                    <i class="bi bi-play-fill fs-5" id="playFullIcon"></i>
-                    <span id="playFullText">Listen Full Surah</span>
-                </button>
+                <!-- Continuous Play All Audio with Resume Memory -->
+                <div class="d-inline-flex align-items-center gap-1">
+                    <button type="button" id="btnPlayFullSurah" class="btn btn-sm btn-gold rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1" title="Play or Resume Surah recitation">
+                        <i class="bi bi-play-fill fs-5" id="playFullIcon"></i>
+                        <span id="playFullText">{{ ($savedAyahNumber ?? 1) > 1 ? 'Resume Surah (Ayah ' . $savedAyahNumber . ')' : 'Listen Full Surah' }}</span>
+                    </button>
+                    <button type="button" id="btnRestartSurah" class="btn btn-sm btn-outline-secondary bg-white rounded-circle shadow-sm {{ ($savedAyahNumber ?? 1) > 1 ? '' : 'd-none' }}" title="Restart from Ayah 1" style="width: 32px; height: 32px; padding: 0;">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
 
                 <a href="{{ route('ai-teacher.index', ['surah' => $surahNumber, 'ayah' => 1]) }}" class="btn btn-sm btn-emerald rounded-pill px-3 d-inline-flex align-items-center gap-1">
                     <i class="bi bi-mic-fill text-gold"></i>
@@ -168,9 +173,77 @@
         var baseFontSize = 1.85;
         var currentFontSize = baseFontSize;
         var isPlayingContinuous = false;
-        var currentAyahIndex = 1;
         var totalAyahs = {{ $surah['numberOfAyahs'] ?? count($surah['ayahs'] ?? []) }};
         var audioPlayer = document.getElementById('mainAudioPlayer');
+
+        // Storage keys for persistent reading & listening memory
+        var storageKeyAyah = 'quran_last_ayah_s_{{ $surahNumber }}';
+        var storageKeyTime = 'quran_last_time_s_{{ $surahNumber }}';
+        var serverSavedAyah = {{ $savedAyahNumber ?? 1 }};
+        var localSavedAyah = parseInt(localStorage.getItem(storageKeyAyah), 10);
+
+        // Determine starting Ayah (priority: local browser memory -> database saved progress -> 1)
+        var currentAyahIndex = (localSavedAyah && localSavedAyah >= 1 && localSavedAyah <= totalAyahs)
+            ? localSavedAyah
+            : ((serverSavedAyah >= 1 && serverSavedAyah <= totalAyahs) ? serverSavedAyah : 1);
+
+        // Update button UI & icons
+        function updatePlayButtonState() {
+            if (isPlayingContinuous && !audioPlayer.paused) {
+                $('#playFullIcon').removeClass('bi-play-fill').addClass('bi-pause-fill');
+                $('#playFullText').text('Pause Surah');
+                $('#btnRestartSurah').removeClass('d-none');
+            } else {
+                $('#playFullIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+                if (currentAyahIndex > 1) {
+                    $('#playFullText').text('Resume Surah (Ayah ' + currentAyahIndex + ')');
+                    $('#btnRestartSurah').removeClass('d-none');
+                } else {
+                    $('#playFullText').text('Listen Full Surah');
+                    $('#btnRestartSurah').addClass('d-none');
+                }
+            }
+        }
+
+        function markStoppedAyahBadge(ayahNumber) {
+            $('.last-stopped-badge').remove();
+            if (ayahNumber > 1 && ayahNumber <= totalAyahs) {
+                var card = $('#ayah-' + ayahNumber);
+                if (card.length && !card.find('.last-stopped-badge').length) {
+                    card.find('.badge-emerald').after(
+                        '<span class="badge bg-warning text-dark rounded-pill fw-semibold ms-1 last-stopped-badge shadow-sm" style="font-size: 0.72rem;"><i class="bi bi-geo-alt-fill me-1"></i>Resume Here</span>'
+                    );
+                }
+            }
+        }
+
+        function highlightAyahCard(ayahNumber) {
+            $('.ayah-card').removeClass('border-emerald bg-emerald-light bg-opacity-25 active-reciting');
+            var card = $('#ayah-' + ayahNumber);
+            card.addClass('border-emerald bg-emerald-light bg-opacity-25 active-reciting');
+            $('.last-stopped-badge').remove();
+        }
+
+        function saveCurrentPosition() {
+            if (currentAyahIndex >= 1 && currentAyahIndex <= totalAyahs) {
+                localStorage.setItem(storageKeyAyah, currentAyahIndex);
+                if (audioPlayer && !isNaN(audioPlayer.currentTime)) {
+                    localStorage.setItem(storageKeyTime, Math.floor(audioPlayer.currentTime));
+                }
+                // Persist to database
+                $.post("{{ route('quran.progress.update') }}", {
+                    surah_number: {{ $surahNumber }},
+                    ayah_number: currentAyahIndex,
+                    _token: "{{ csrf_token() }}"
+                });
+            }
+        }
+
+        // Initialize button & badge if previous playback was stopped at Ayah > 1
+        if (currentAyahIndex > 1) {
+            updatePlayButtonState();
+            markStoppedAyahBadge(currentAyahIndex);
+        }
 
         // Font size controllers
         $('#fontIncrease').on('click', function() {
@@ -223,22 +296,55 @@
             var ayah = $(this).data('ayah');
             var url = $(this).data('url');
 
+            currentAyahIndex = ayah;
             playAyahAudio(ayah, url, false);
         });
 
-        // Play Full Surah Continuous
+        // Play Full Surah / Resume Continuous
         $('#btnPlayFullSurah').on('click', function() {
-            if (isPlayingContinuous) {
+            if (isPlayingContinuous && !audioPlayer.paused) {
+                // Pause current continuous recitation
                 audioPlayer.pause();
                 isPlayingContinuous = false;
-                $('#playFullIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
-                $('#playFullText').text('Listen Full Surah');
+                saveCurrentPosition();
+                updatePlayButtonState();
+                markStoppedAyahBadge(currentAyahIndex);
+                $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
             } else {
+                // Resume or start from stopped Ayah
                 isPlayingContinuous = true;
-                currentAyahIndex = 1;
-                $('#playFullIcon').removeClass('bi-play-fill').addClass('bi-pause-fill');
-                $('#playFullText').text('Pause Surah');
+                updatePlayButtonState();
+
+                var card = $('#ayah-' + currentAyahIndex);
+                var expectedUrl = card.data('audio');
+
+                // If already loaded for currentAyahIndex and paused midway, resume seamlessly
+                if (audioPlayer.src && audioPlayer.src === expectedUrl && audioPlayer.currentTime > 0) {
+                    audioPlayer.play().catch(function(e) { playCurrentIndex(); });
+                    $('#globalAudioBar').removeClass('d-none');
+                    $('#audioToggleIcon').removeClass('bi-play-fill').addClass('bi-pause-fill');
+                    highlightAyahCard(currentAyahIndex);
+                } else {
+                    playCurrentIndex();
+                }
+            }
+        });
+
+        // Restart from Ayah 1 button
+        $('#btnRestartSurah').on('click', function() {
+            currentAyahIndex = 1;
+            localStorage.setItem(storageKeyAyah, 1);
+            localStorage.setItem(storageKeyTime, 0);
+            $('.last-stopped-badge').remove();
+            updatePlayButtonState();
+
+            if (isPlayingContinuous) {
                 playCurrentIndex();
+            } else {
+                var card = $('#ayah-1');
+                if (card.length) {
+                    $('html, body').animate({ scrollTop: card.offset().top - 120 }, 300);
+                }
             }
         });
 
@@ -247,23 +353,27 @@
             if (card.length) {
                 var url = card.data('audio');
                 playAyahAudio(currentAyahIndex, url, true);
-                
-                // Scroll into view
+
+                // Scroll smoothly into view
                 $('html, body').animate({
                     scrollTop: card.offset().top - 120
                 }, 400);
             } else {
-                // Surah ended
+                // End of Surah
                 isPlayingContinuous = false;
-                $('#playFullIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
-                $('#playFullText').text('Listen Full Surah');
+                currentAyahIndex = 1;
+                localStorage.setItem(storageKeyAyah, 1);
+                localStorage.setItem(storageKeyTime, 0);
+                updatePlayButtonState();
+                $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
             }
         }
 
         function playAyahAudio(ayahNumber, audioUrl, continuous) {
-            $('.ayah-card').removeClass('border-emerald bg-emerald-light bg-opacity-25');
-            $('#ayah-' + ayahNumber).addClass('border-emerald bg-emerald-light bg-opacity-25');
+            currentAyahIndex = ayahNumber;
+            isPlayingContinuous = continuous;
 
+            highlightAyahCard(ayahNumber);
             $('#globalAudioBar').removeClass('d-none');
             $('#currentPlayingAyah').text(ayahNumber);
 
@@ -271,39 +381,63 @@
             audioPlayer.play().catch(function(e) { console.log('Playback error:', e); });
 
             $('#audioToggleIcon').removeClass('bi-play-fill').addClass('bi-pause-fill');
+            updatePlayButtonState();
 
-            // Save reading progress via AJAX
-            $.post("{{ route('quran.progress.update') }}", {
-                surah_number: {{ $surahNumber }},
-                ayah_number: ayahNumber,
-                _token: "{{ csrf_token() }}"
-            });
+            // Save progress immediately
+            saveCurrentPosition();
 
             audioPlayer.onended = function() {
-                if (continuous && currentAyahIndex < totalAyahs) {
+                if (isPlayingContinuous && currentAyahIndex < totalAyahs) {
                     currentAyahIndex++;
+                    saveCurrentPosition();
                     playCurrentIndex();
+                } else if (currentAyahIndex >= totalAyahs) {
+                    // Full Surah finished
+                    isPlayingContinuous = false;
+                    currentAyahIndex = 1;
+                    localStorage.setItem(storageKeyAyah, 1);
+                    localStorage.setItem(storageKeyTime, 0);
+                    updatePlayButtonState();
+                    $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
                 } else {
                     $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+                    updatePlayButtonState();
+                    markStoppedAyahBadge(currentAyahIndex);
                 }
             };
         }
 
+        // Floating Player Toggle (Play / Pause)
         $('#audioToggleBtn').on('click', function() {
             if (audioPlayer.paused) {
                 audioPlayer.play();
                 $('#audioToggleIcon').removeClass('bi-play-fill').addClass('bi-pause-fill');
+                isPlayingContinuous = true;
+                updatePlayButtonState();
             } else {
                 audioPlayer.pause();
                 $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+                isPlayingContinuous = false;
+                saveCurrentPosition();
+                updatePlayButtonState();
+                markStoppedAyahBadge(currentAyahIndex);
             }
         });
 
+        // Floating Player Close button
         $('#closeAudioBar').on('click', function() {
             audioPlayer.pause();
             isPlayingContinuous = false;
+            saveCurrentPosition();
+            updatePlayButtonState();
+            markStoppedAyahBadge(currentAyahIndex);
             $('#globalAudioBar').addClass('d-none');
-            $('.ayah-card').removeClass('border-emerald bg-emerald-light bg-opacity-25');
+            $('.ayah-card').removeClass('border-emerald bg-emerald-light bg-opacity-25 active-reciting');
+        });
+
+        // Save position when tab is closed or navigated away
+        window.addEventListener('beforeunload', function() {
+            saveCurrentPosition();
         });
     });
 </script>
