@@ -142,10 +142,6 @@
                             </li>
                             <li><a class="dropdown-item py-2" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> Profile Settings</a></li>
                             <li><a class="dropdown-item py-2" href="{{ route('progress.index') }}"><i class="bi bi-graph-up me-2"></i> Learning Statistics</a></li>
-                            @if(Auth::user()->isAdmin())
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2 text-warning fw-semibold" href="{{ route('admin.dashboard') }}"><i class="bi bi-shield-lock me-2"></i> Admin Panel</a></li>
-                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
