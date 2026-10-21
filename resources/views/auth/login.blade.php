@@ -71,18 +71,7 @@
         </div>
     </form>
 
-    <!-- Quick Demo Fill -->
-    <div class="mt-4 pt-3 border-top text-center">
-        <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 text-secondary shadow-2xs" style="font-size: 0.76rem;" onclick="fillDemo('student@quran-ai.com')">
-            <i class="bi bi-key-fill text-gold me-1"></i> Quick Fill Demo Account
-        </button>
-    </div>
-
     <script>
-        function fillDemo(email) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = 'Password123!';
-        }
 
         document.getElementById('togglePasswordBtn').addEventListener('click', function() {
             var passInput = document.getElementById('password');
