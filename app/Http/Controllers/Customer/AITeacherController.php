@@ -50,8 +50,14 @@ class AITeacherController extends Controller
             ['user_id' => $request->user()->id]
         );
 
+        $defaultReciter = \App\Models\SiteSetting::get('default_reciter', 'ar.alafasy');
+        $allowStudentChange = \App\Models\SiteSetting::get('allow_student_reciter_change', '1') == '1';
+        $activeReciter = ($allowStudentChange && !empty($prefs->preferred_reciter))
+            ? $prefs->preferred_reciter
+            : $defaultReciter;
+
         $ayah = $this->quranApi->getAyah($surahNumber, $ayahNumber);
-        $audio = $this->quranApi->getAyahAudio($surahNumber, $ayahNumber, $prefs->preferred_reciter);
+        $audio = $this->quranApi->getAyahAudio($surahNumber, $ayahNumber, $activeReciter);
         $translation = $this->quranApi->getAyah($surahNumber, $ayahNumber, $prefs->preferred_translation);
         $words = $this->quranApi->getAyahWords($surahNumber, $ayahNumber);
 

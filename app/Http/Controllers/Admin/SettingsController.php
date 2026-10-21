@@ -6,12 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Models\AdminActivityLog;
 use App\Models\ApiUsageLog;
+use App\Services\Quran\QuranApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
 {
+    protected QuranApiService $quranApi;
+
+    public function __construct(QuranApiService $quranApi)
+    {
+        $this->quranApi = $quranApi;
+    }
+
     /**
      * Show site settings, AI configuration, and system logs.
      */
@@ -34,6 +42,29 @@ class SettingsController extends Controller
     }
 
     /**
+     * Preview sample audio for a selected reciter (AJAX).
+     */
+    public function previewReciter(Request $request)
+    {
+        $reciter = $request->query('reciter', 'ar.alafasy');
+        $audio = $this->quranApi->getAyahAudio(1, 1, $reciter);
+
+        if (!$audio || empty($audio['audio'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sample audio could not be loaded for reciter: ' . $reciter,
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'reciter' => $reciter,
+            'reciter_name' => $audio['edition']['englishName'] ?? $reciter,
+            'audio_url' => $audio['audio'],
+        ]);
+    }
+
+    /**
      * Update platform settings.
      */
     public function update(Request $request)
@@ -42,7 +73,15 @@ class SettingsController extends Controller
             'site_name' => ['required', 'string', 'max:100'],
             'site_tagline' => ['nullable', 'string', 'max:255'],
             'contact_email' => ['nullable', 'email', 'max:255'],
-            'default_reciter' => ['required', 'string'],
+            'default_reciter' => ['required', 'string', 'max:100'],
+            'custom_reciter' => ['nullable', 'string', 'max:100'],
+            'audio_quality' => ['required', 'string', 'in:64,128,192'],
+            'audio_cdn_source' => ['required', 'string', 'in:islamic_network,every_ayah,quran_cdn'],
+            'allow_student_reciter_change' => ['nullable', 'boolean'],
+            'teacher_voice_speed' => ['required', 'numeric', 'min:0.5', 'max:1.5'],
+            'teacher_voice_pitch' => ['required', 'numeric', 'min:0.5', 'max:1.5'],
+            'teacher_default_language' => ['required', 'string', 'in:en,ur,ar'],
+            'enable_teacher_auto_speech' => ['nullable', 'boolean'],
             'default_translation' => ['required', 'string'],
             'ai_provider' => ['required', 'string', 'in:heuristic,openai,azure,gemini'],
             'ai_model' => ['nullable', 'string', 'max:100'],
@@ -53,7 +92,17 @@ class SettingsController extends Controller
             'maintenance_mode' => ['nullable', 'boolean'],
         ]);
 
-        $booleanFields = ['enable_user_registration', 'enable_voice_recognition', 'maintenance_mode'];
+        if (!empty($validated['custom_reciter'])) {
+            $validated['default_reciter'] = trim($validated['custom_reciter']);
+        }
+
+        $booleanFields = [
+            'enable_user_registration',
+            'enable_voice_recognition',
+            'maintenance_mode',
+            'enable_teacher_auto_speech',
+            'allow_student_reciter_change',
+        ];
         foreach ($booleanFields as $field) {
             $validated[$field] = $request->has($field) ? '1' : '0';
         }
@@ -73,7 +122,7 @@ class SettingsController extends Controller
             'update_settings',
             'SiteSetting',
             null,
-            ['action' => 'Updated platform settings and AI configuration']
+            ['action' => 'Updated platform settings, audio reciter and voice systems']
         );
 
         return back()->with('success', 'Settings saved successfully.');

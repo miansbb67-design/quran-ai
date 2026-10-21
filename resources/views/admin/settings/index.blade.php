@@ -70,20 +70,159 @@
                         </div>
                     </div>
 
-                    <!-- Default Reciter and Translation -->
-                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">Quran Defaults</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Default Audio Reciter</label>
-                            <select name="default_reciter" class="form-select">
-                                <option value="ar.alafasy" {{ ($settings['default_reciter'] ?? '') === 'ar.alafasy' ? 'selected' : '' }}>Mishary Rashid Alafasy</option>
-                                <option value="ar.abdulbasitmurattal" {{ ($settings['default_reciter'] ?? '') === 'ar.abdulbasitmurattal' ? 'selected' : '' }}>Abdul Basit Abdul Samad</option>
-                                <option value="ar.husary" {{ ($settings['default_reciter'] ?? '') === 'ar.husary' ? 'selected' : '' }}>Mahmoud Khalil Al-Husary</option>
-                                <option value="ar.shaatree" {{ ($settings['default_reciter'] ?? '') === 'ar.shaatree' ? 'selected' : '' }}>Abu Bakr Al-Shatri</option>
-                            </select>
+                    <!-- Quran Recitation Voices & Audio Systems -->
+                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">
+                        <i class="bi bi-soundwave text-gold me-1"></i> Recitation Voices & Audio Engine Studio (صوتی نظام و قراء کرام)
+                    </h6>
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <div class="row g-3">
+                            <!-- Reciter Selector -->
+                            <div class="col-md-7">
+                                <label class="form-label small fw-bold text-dark">
+                                    <i class="bi bi-mic-fill text-emerald me-1"></i> Platform Default Reciter (تلاوت کی آواز)
+                                </label>
+                                <select name="default_reciter" id="selectDefaultReciter" class="form-select fw-semibold">
+                                    @php $currentReciter = $settings['default_reciter'] ?? 'ar.alafasy'; @endphp
+                                    <optgroup label="📖 Tajweed & Teaching Masters (تعلیم و ترتیل - سست رفتار)">
+                                        <option value="ar.husary" {{ $currentReciter === 'ar.husary' ? 'selected' : '' }}>محمود خلیل الحصری (مرتل) - Mahmoud Khalil Al-Husary</option>
+                                        <option value="ar.husarymujawwad" {{ $currentReciter === 'ar.husarymujawwad' ? 'selected' : '' }}>محمود خلیل الحصری (مجوَّد) - Al-Husary (Mujawwad)</option>
+                                        <option value="ar.minshawi" {{ $currentReciter === 'ar.minshawi' ? 'selected' : '' }}>محمد صدیق المنشاوی (مرتل) - Muhammad Siddiq Al-Minshawi</option>
+                                        <option value="ar.abdulsamad" {{ ($currentReciter === 'ar.abdulsamad' || $currentReciter === 'ar.abdulbasitmurattal') ? 'selected' : '' }}>عبد الباسط عبد الصمد (مرتل) - Abdul Basit Abdul Samad</option>
+                                        <option value="ar.aymanswoaid" {{ $currentReciter === 'ar.aymanswoaid' ? 'selected' : '' }}>د. أيمن سويد (عالم التجويد) - Dr. Ayman Sowaid</option>
+                                        <option value="ar.hudhaify" {{ $currentReciter === 'ar.hudhaify' ? 'selected' : '' }}>علي بن عبد الرحمن الحذيفي - Ali Al-Hudhaify</option>
+                                        <option value="ar.ibrahimakhbar" {{ $currentReciter === 'ar.ibrahimakhbar' ? 'selected' : '' }}>إبراهيم الأخضر - Ibrahim Al-Akhdar</option>
+                                        <option value="ar.parhizgar" {{ $currentReciter === 'ar.parhizgar' ? 'selected' : '' }}>شهريار پرهيزگار - Shahriar Parhizgar</option>
+                                    </optgroup>
+                                    <optgroup label="🕋 Imams of Harameen (أئمة الحرمين الشريفين)">
+                                        <option value="ar.abdurrahmaansudais" {{ $currentReciter === 'ar.abdurrahmaansudais' ? 'selected' : '' }}>عبد الرحمن السديس (إمام الحرم) - Abdur-Rahman As-Sudais</option>
+                                        <option value="ar.saoodshuraym" {{ $currentReciter === 'ar.saoodshuraym' ? 'selected' : '' }}>سعود الشريم - Saud Ash-Shuraim</option>
+                                        <option value="ar.mahermuaiqly" {{ $currentReciter === 'ar.mahermuaiqly' ? 'selected' : '' }}>ماهر المعيقلي - Maher Al-Muaiqly</option>
+                                        <option value="ar.abdullahbasfar" {{ $currentReciter === 'ar.abdullahbasfar' ? 'selected' : '' }}>عبد الله بصفر - Abdullah Basfar</option>
+                                    </optgroup>
+                                    <optgroup label="🌟 Famous Contemporary Qaris (مشہور و مقبول قراء)">
+                                        <option value="ar.alafasy" {{ $currentReciter === 'ar.alafasy' ? 'selected' : '' }}>مشاري راشد العفاسي - Mishary Rashid Alafasy (Default)</option>
+                                        <option value="ar.shaatree" {{ $currentReciter === 'ar.shaatree' ? 'selected' : '' }}>أبو بكر الشاطري - Abu Bakr Ash-Shaatree</option>
+                                        <option value="ar.ahmedajamy" {{ $currentReciter === 'ar.ahmedajamy' ? 'selected' : '' }}>أحمد بن علي العجمي - Ahmed Al-Ajamy</option>
+                                        <option value="ar.hanirifai" {{ $currentReciter === 'ar.hanirifai' ? 'selected' : '' }}>هاني الرفاعي - Hani Ar-Rifai</option>
+                                        <option value="ar.muhammadayyoub" {{ $currentReciter === 'ar.muhammadayyoub' ? 'selected' : '' }}>محمد أيوب - Muhammad Ayyoub</option>
+                                        <option value="ar.muhammadjibreel" {{ $currentReciter === 'ar.muhammadjibreel' ? 'selected' : '' }}>محمد جبريل - Muhammad Jibreel</option>
+                                    </optgroup>
+                                </select>
+                                <small class="text-muted d-block mt-1">Select the Qari whose voice will be used for Ayah recitation, playback, and AI teacher comparison.</small>
+                            </div>
+
+                            <!-- Live Audio Test & Preview -->
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold text-dark">
+                                    <i class="bi bi-headphones text-gold me-1"></i> Preview Voice (آواز سنیں)
+                                </label>
+                                <div>
+                                    <button type="button" id="btnTestVoice" class="btn btn-gold btn-sm w-100 rounded-pill fw-bold shadow-sm py-2">
+                                        <i class="bi bi-volume-up-fill me-1" id="previewVoiceIcon"></i> <span id="previewVoiceText">Test Sample Voice</span>
+                                    </button>
+                                    <audio id="reciterPreviewPlayer" preload="none"></audio>
+                                </div>
+                                <div id="previewStatusBox" class="small text-muted mt-1 fst-italic text-truncate" style="min-height: 20px;">
+                                    Click above to listen to Bismillah by selected Qari.
+                                </div>
+                            </div>
+
+                            <!-- Custom Reciter Identifier -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Custom Reciter Identifier (اختیاری کوڈ)</label>
+                                <input type="text" name="custom_reciter" id="customReciterInput" class="form-control form-control-sm font-monospace" placeholder="e.g. ar.aymanswoaid" value="">
+                                <small class="text-muted d-block mt-1">Leave blank to use the dropdown above, or enter any custom Quran API reciter edition code.</small>
+                            </div>
+
+                            <!-- Audio Quality / Bitrate -->
+                            <div class="col-md-3 col-6">
+                                <label class="form-label small fw-semibold">Audio Quality</label>
+                                <select name="audio_quality" class="form-select form-select-sm">
+                                    @php $q = $settings['audio_quality'] ?? '128'; @endphp
+                                    <option value="128" {{ $q === '128' ? 'selected' : '' }}>128 kbps (Standard High Quality)</option>
+                                    <option value="64" {{ $q === '64' ? 'selected' : '' }}>64 kbps (Low Bandwidth / Mobile)</option>
+                                    <option value="192" {{ $q === '192' ? 'selected' : '' }}>192 kbps (Studio Master Quality)</option>
+                                </select>
+                            </div>
+
+                            <!-- Audio Server / CDN Source -->
+                            <div class="col-md-3 col-6">
+                                <label class="form-label small fw-semibold">Audio Server Engine</label>
+                                <select name="audio_cdn_source" class="form-select form-select-sm">
+                                    @php $cdn = $settings['audio_cdn_source'] ?? 'islamic_network'; @endphp
+                                    <option value="islamic_network" {{ $cdn === 'islamic_network' ? 'selected' : '' }}>Islamic Network CDN</option>
+                                    <option value="quran_cdn" {{ $cdn === 'quran_cdn' ? 'selected' : '' }}>Quran.com Cloud CDN</option>
+                                    <option value="every_ayah" {{ $cdn === 'every_ayah' ? 'selected' : '' }}>EveryAyah Server</option>
+                                </select>
+                            </div>
+
+                            <!-- Student Reciter Policy Toggle -->
+                            <div class="col-12 pt-1 border-top">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="allow_student_reciter_change" value="1" id="allowReciterSwitch" {{ ($settings['allow_student_reciter_change'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label small fw-semibold text-dark" for="allowReciterSwitch">
+                                        Allow Students to choose their own Reciter in their Profile
+                                    </label>
+                                    <small class="text-muted d-block">If unchecked, all students are enforced to use the Admin Default Reciter chosen above.</small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Default English Translation</label>
+                    </div>
+
+                    <!-- AI Spoken Teacher Guidance Voice Engine (معلم صوتی نظام) -->
+                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">
+                        <i class="bi bi-chat-quote-fill text-gold me-1"></i> AI Voice Teacher Spoken Feedback Engine (استاد کی آواز کی ترتیبات)
+                    </h6>
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Default Spoken Language</label>
+                                <select name="teacher_default_language" class="form-select form-select-sm fw-semibold">
+                                    @php $tLang = $settings['teacher_default_language'] ?? 'en'; @endphp
+                                    <option value="en" {{ $tLang === 'en' ? 'selected' : '' }}>English</option>
+                                    <option value="ur" {{ $tLang === 'ur' ? 'selected' : '' }}>اردو (Urdu)</option>
+                                    <option value="ar" {{ $tLang === 'ar' ? 'selected' : '' }}>العربية (Arabic)</option>
+                                </select>
+                                <small class="text-muted d-block mt-1">Default language for spoken voice explanations</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Teacher Speaking Rate (رفتار)</label>
+                                <select name="teacher_voice_speed" class="form-select form-select-sm">
+                                    @php $tSpeed = $settings['teacher_voice_speed'] ?? '0.95'; @endphp
+                                    <option value="0.80" {{ $tSpeed == '0.80' ? 'selected' : '' }}>0.80x (Slow / Tajweed Clarity)</option>
+                                    <option value="0.95" {{ $tSpeed == '0.95' ? 'selected' : '' }}>0.95x (Natural / Recommended)</option>
+                                    <option value="1.05" {{ $tSpeed == '1.05' ? 'selected' : '' }}>1.05x (Brisk / Fast)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Teacher Voice Pitch (سر)</label>
+                                <select name="teacher_voice_pitch" class="form-select form-select-sm">
+                                    @php $tPitch = $settings['teacher_voice_pitch'] ?? '1.0'; @endphp
+                                    <option value="0.9" {{ $tPitch == '0.9' ? 'selected' : '' }}>0.9 (Calm / Deeper)</option>
+                                    <option value="1.0" {{ $tPitch == '1.0' ? 'selected' : '' }}>1.0 (Natural Standard)</option>
+                                    <option value="1.15" {{ $tPitch == '1.15' ? 'selected' : '' }}>1.15 (Clear / Higher)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 pt-1 border-top">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="enable_teacher_auto_speech" value="1" id="autoSpeechSwitch" {{ ($settings['enable_teacher_auto_speech'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label small fw-semibold text-dark" for="autoSpeechSwitch">
+                                        Auto-read Pronunciation Mistakes Aloud by Default
+                                    </label>
+                                    <small class="text-muted d-block">When enabled, the voice teacher immediately explains any detected recitation mistakes out loud.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Translation Default -->
+                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">Quran Translation Default</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label small fw-semibold">Default English Translation Edition</label>
                             <select name="default_translation" class="form-select">
                                 <option value="en.asad" {{ ($settings['default_translation'] ?? '') === 'en.asad' ? 'selected' : '' }}>Muhammad Asad</option>
                                 <option value="en.sahih" {{ ($settings['default_translation'] ?? '') === 'en.sahih' ? 'selected' : '' }}>Saheeh International</option>
@@ -198,4 +337,72 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        var player = document.getElementById('reciterPreviewPlayer');
+        var isPlaying = false;
+
+        function getActiveReciter() {
+            var custom = $('#customReciterInput').val().trim();
+            if (custom) return custom;
+            return $('#selectDefaultReciter').val();
+        }
+
+        $('#btnTestVoice').on('click', function() {
+            if (isPlaying && !player.paused) {
+                player.pause();
+                $('#previewVoiceIcon').removeClass('bi-pause-fill').addClass('bi-volume-up-fill');
+                $('#previewVoiceText').text('Resume Voice');
+                $('#previewStatusBox').html('<span class="text-secondary">Audio paused.</span>');
+                isPlaying = false;
+                return;
+            }
+
+            var reciter = getActiveReciter();
+            $('#previewVoiceIcon').removeClass('bi-volume-up-fill bi-pause-fill').addClass('bi-arrow-clockwise');
+            $('#previewVoiceText').text('Loading Audio...');
+            $('#previewStatusBox').html('<span class="text-primary"><div class="spinner-border spinner-border-sm me-1"></div> Fetching sample recitation for ' + reciter + '...</span>');
+
+            $.get("{{ route('admin.settings.preview-reciter') }}", { reciter: reciter }, function(res) {
+                if (res.status === 'success' && res.audio_url) {
+                    player.src = res.audio_url;
+                    player.play().then(function() {
+                        isPlaying = true;
+                        $('#previewVoiceIcon').removeClass('bi-arrow-clockwise bi-volume-up-fill').addClass('bi-pause-fill');
+                        $('#previewVoiceText').text('Pause Sample');
+                        $('#previewStatusBox').html('<span class="text-success fw-bold"><i class="bi bi-soundwave text-gold me-1"></i> Playing: ' + (res.reciter_name || reciter) + ' (Bismillah)</span>');
+                    }).catch(function(e) {
+                        $('#previewVoiceIcon').removeClass('bi-arrow-clockwise').addClass('bi-volume-up-fill');
+                        $('#previewVoiceText').text('Test Sample Voice');
+                        $('#previewStatusBox').html('<span class="text-danger">Audio playback blocked by browser.</span>');
+                    });
+                }
+            }).fail(function(xhr) {
+                $('#previewVoiceIcon').removeClass('bi-arrow-clockwise').addClass('bi-volume-up-fill');
+                $('#previewVoiceText').text('Test Sample Voice');
+                var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Could not load audio for this reciter.';
+                $('#previewStatusBox').html('<span class="text-danger"><i class="bi bi-x-circle me-1"></i> ' + msg + '</span>');
+            });
+        });
+
+        player.onended = function() {
+            isPlaying = false;
+            $('#previewVoiceIcon').removeClass('bi-pause-fill').addClass('bi-volume-up-fill');
+            $('#previewVoiceText').text('Test Sample Voice');
+            $('#previewStatusBox').html('<span class="text-muted">Sample finished. Ready to test another reciter.</span>');
+        };
+
+        $('#selectDefaultReciter').on('change', function() {
+            if (isPlaying) {
+                player.pause();
+                isPlaying = false;
+                $('#previewVoiceIcon').removeClass('bi-pause-fill').addClass('bi-volume-up-fill');
+                $('#previewVoiceText').text('Test Sample Voice');
+            }
+            $('#previewStatusBox').html('<span class="text-muted">Selected: ' + $(this).find(':selected').text().trim() + '. Click Test to listen.</span>');
+        });
+    });
+</script>
+@endpush
 @endsection

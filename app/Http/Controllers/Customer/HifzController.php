@@ -59,8 +59,14 @@ class HifzController extends Controller
         $user = $request->user();
         $prefs = UserPreference::firstOrCreate(['user_id' => $user->id]);
 
+        $defaultReciter = \App\Models\SiteSetting::get('default_reciter', 'ar.alafasy');
+        $allowStudentChange = \App\Models\SiteSetting::get('allow_student_reciter_change', '1') == '1';
+        $activeReciter = ($allowStudentChange && !empty($prefs->preferred_reciter))
+            ? $prefs->preferred_reciter
+            : $defaultReciter;
+
         $surah = $this->quranApi->getSurah($surahNumber);
-        $audio = $this->quranApi->getSurahAudio($surahNumber, $prefs->preferred_reciter);
+        $audio = $this->quranApi->getSurahAudio($surahNumber, $activeReciter);
 
         if (!$surah) {
             return back()->with('error', 'Unable to load Surah data.');

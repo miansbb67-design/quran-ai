@@ -113,6 +113,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [AdminSettingsController::class, 'index'])->name('index');
         Route::post('/', [AdminSettingsController::class, 'update'])->name('update');
+        Route::get('/preview-reciter', [AdminSettingsController::class, 'previewReciter'])->name('preview-reciter');
         Route::post('/clear-cache', [AdminSettingsController::class, 'clearCache'])->name('clear-cache');
     });
 });

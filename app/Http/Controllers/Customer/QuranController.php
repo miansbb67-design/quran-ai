@@ -55,7 +55,11 @@ class QuranController extends Controller
         );
 
         $translationEdition = $prefs->preferred_translation ?: 'en.asad';
-        $reciterEdition = $prefs->preferred_reciter ?: 'ar.alafasy';
+        $defaultReciter = \App\Models\SiteSetting::get('default_reciter', 'ar.alafasy');
+        $allowStudentChange = \App\Models\SiteSetting::get('allow_student_reciter_change', '1') == '1';
+        $reciterEdition = ($allowStudentChange && !empty($prefs->preferred_reciter))
+            ? $prefs->preferred_reciter
+            : $defaultReciter;
 
         // Load Arabic text and translation in a single combined API call to prevent timeout on large surahs
         $multiEditions = $this->quranApi->getSurahWithEditions($surahNumber, ['quran-uthmani', $translationEdition]);

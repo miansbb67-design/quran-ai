@@ -33,6 +33,21 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
             ];
         }
 
+        // Clean target text from BOM
+        $targetText = preg_replace('/^\x{FEFF}/u', '', trim($targetText));
+
+        // Handle optional introductory Bismillah (Tasmiyah) for Surahs 2-114 Ayah 1
+        $surah = isset($options['surah']) ? (int) $options['surah'] : null;
+        $ayah = isset($options['ayah']) ? (int) $options['ayah'] : null;
+        if ($surah > 1 && $surah !== 9 && $ayah === 1) {
+            $bismillahPattern = '/^(\x{FEFF})?(بِسْمِ[\s\x{0600}-\x{06FF}]+?ٱلرَّحِيمِ|بسم\s+الله\s+الرحمن\s+الرحيم)\s*/u';
+            $strippedRecognized = preg_replace($bismillahPattern, '', $cleanRecognized);
+            if (!empty(trim($strippedRecognized))) {
+                // Student recited Bismillah before Ayah 1 + the verse: grade on the verse itself
+                $recognizedText = trim($strippedRecognized);
+            }
+        }
+
         // Normalize both texts for comparison
         $normalizedRecognized = $this->normalizeArabic($recognizedText);
         $normalizedTarget = $this->normalizeArabic($targetText);
@@ -486,6 +501,7 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
      */
     protected function normalizeArabic(string $text): string
     {
+        $text = preg_replace('/^\x{FEFF}/u', '', $text);
         $text = str_replace(['أ', 'إ', 'آ', 'ٱ'], 'ا', $text);
         $text = str_replace('ة', 'ه', $text);
         $text = str_replace('ى', 'ي', $text);
@@ -498,6 +514,7 @@ class QuranRecitationAnalysisService implements RecitationAnalysisInterface
      */
     protected function removeDiacritics(string $text): string
     {
+        $text = preg_replace('/^\x{FEFF}/u', '', $text);
         return preg_replace('/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06DC}\x{06DF}-\x{06E4}\x{06E7}\x{06E8}\x{06EA}-\x{06ED}]/u', '', $text);
     }
 

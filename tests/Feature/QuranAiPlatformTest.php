@@ -239,4 +239,71 @@ class QuranAiPlatformTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseMissing('practice_sessions', ['id' => $session->id]);
     }
+
+    /**
+     * Test that Ayah 1 of Surahs 2-114 cleanly strips Bismillah and BOM, and correctly evaluates recitation.
+     */
+    public function test_surah_ayah_bismillah_and_bom_cleaning(): void
+    {
+        $quranApi = app(\App\Services\Quran\QuranApiService::class);
+        $aiService = app(\App\Services\AI\RecitationAnalysisInterface::class);
+
+        // Test 1: Surah 1:1 should not have BOM
+        $cleaned1 = $quranApi->cleanAyahArabicText(1, 1, "\xEF\xBB\xBFبِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ");
+        $this->assertEquals("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ", $cleaned1);
+
+        // Reciting 1:1 should score 100%
+        $analysis1 = $aiService->analyzeRecitation("بسم الله الرحمن الرحيم", $cleaned1, ['surah' => 1, 'ayah' => 1]);
+        $this->assertEquals(100.0, $analysis1['confidence_score']);
+
+        // Test 2: Surah 2:1 prepended Bismillah from raw API should be stripped to only the verse 'الٓمٓ'
+        $cleaned2 = $quranApi->cleanAyahArabicText(2, 1, "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ الٓمٓ");
+        $this->assertEquals("الٓمٓ", $cleaned2);
+
+        // Reciting 'الم' for Surah 2:1 should match 100%
+        $analysis2 = $aiService->analyzeRecitation("الم", $cleaned2, ['surah' => 2, 'ayah' => 1]);
+        $this->assertEquals(100.0, $analysis2['confidence_score']);
+
+        // Reciting with introductory Bismillah + 'الم' should also match 100%
+        $analysis2WithBismillah = $aiService->analyzeRecitation("بسم الله الرحمن الرحيم الم", $cleaned2, ['surah' => 2, 'ayah' => 1]);
+        $this->assertEquals(100.0, $analysis2WithBismillah['confidence_score']);
+    }
+
+    /**
+     * Test that admin can preview reciter audio and save comprehensive voice settings.
+     */
+    public function test_admin_can_preview_reciter_voice_and_update_voice_settings(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        // Preview reciter voice endpoint
+        $previewRes = $this->actingAs($admin)->getJson('/admin/settings/preview-reciter?reciter=ar.alafasy');
+        $previewRes->assertStatus(200);
+        $previewRes->assertJsonFragment(['status' => 'success', 'reciter' => 'ar.alafasy']);
+        $this->assertNotNull($previewRes->json('audio_url'));
+
+        // Save expanded voice system settings
+        $updateRes = $this->actingAs($admin)->post('/admin/settings', [
+            'site_name' => 'Bayan AI Recitation Studio',
+            'default_reciter' => 'ar.husary',
+            'audio_quality' => '128',
+            'audio_cdn_source' => 'islamic_network',
+            'allow_student_reciter_change' => '1',
+            'teacher_voice_speed' => '0.95',
+            'teacher_voice_pitch' => '1.0',
+            'teacher_default_language' => 'ur',
+            'enable_teacher_auto_speech' => '1',
+            'default_translation' => 'en.asad',
+            'ai_provider' => 'heuristic',
+            'ai_confidence_threshold' => 75,
+        ]);
+
+        $updateRes->assertRedirect();
+        $this->assertEquals('ar.husary', \App\Models\SiteSetting::get('default_reciter'));
+        $this->assertEquals('ur', \App\Models\SiteSetting::get('teacher_default_language'));
+        $this->assertEquals('128', \App\Models\SiteSetting::get('audio_quality'));
+    }
 }

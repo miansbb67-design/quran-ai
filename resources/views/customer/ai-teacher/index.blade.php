@@ -6,6 +6,17 @@
 @section('content')
 <div class="container-fluid p-0">
 
+    <!-- AI Studio Configuration Data (Eliminates Blade syntax inside <script> for clean IDE validation) -->
+    <div id="aiStudioConfig"
+        data-rate="{{ (float) \App\Models\SiteSetting::get('teacher_voice_speed', 0.95) }}"
+        data-pitch="{{ (float) \App\Models\SiteSetting::get('teacher_voice_pitch', 1.0) }}"
+        data-csrf="{{ csrf_token() }}"
+        data-route-analyze="{{ route('ai-teacher.analyze') }}"
+        data-route-start-session="{{ route('ai-teacher.start-session') }}"
+        data-route-analyze-word="{{ route('ai-teacher.analyze-word') }}"
+        data-route-delete-session="{{ route('ai-teacher.delete-session-history') }}"
+        class="d-none"></div>
+
     <!-- Top Selection Banner -->
     <div class="card card-glass border-0 p-4 mb-3 bg-emerald-grad text-white rounded-4 shadow-sm">
         <div class="row align-items-center g-3">
@@ -68,10 +79,11 @@
                 <!-- Language Selector -->
                 <div class="d-flex align-items-center gap-2">
                     <span class="small text-muted fw-semibold"><i class="bi bi-translate me-1"></i> Voice Language:</span>
+                    @php $defaultLang = \App\Models\SiteSetting::get('teacher_default_language', 'en'); @endphp
                     <select id="teacherVoiceLanguage" class="form-select form-select-sm fw-semibold" style="width: auto;">
-                        <option value="en" selected>English</option>
-                        <option value="ur">اردو (Urdu)</option>
-                        <option value="ar">العربية (Arabic)</option>
+                        <option value="en" {{ $defaultLang === 'en' ? 'selected' : '' }}>English</option>
+                        <option value="ur" {{ $defaultLang === 'ur' ? 'selected' : '' }}>اردو (Urdu)</option>
+                        <option value="ar" {{ $defaultLang === 'ar' ? 'selected' : '' }}>العربية (Arabic)</option>
                     </select>
                 </div>
 
@@ -79,7 +91,8 @@
 
                 <!-- Auto-speak on error -->
                 <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox" id="toggleAutoSpeak" checked>
+                    @php $defaultAutoSpeak = \App\Models\SiteSetting::get('enable_teacher_auto_speech', '1') == '1'; @endphp
+                    <input class="form-check-input" type="checkbox" id="toggleAutoSpeak" {{ $defaultAutoSpeak ? 'checked' : '' }}>
                     <label class="form-check-label small text-secondary" for="toggleAutoSpeak">
                         Auto-read mistakes aloud
                     </label>
@@ -107,9 +120,9 @@
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge badge-emerald px-3 py-2 rounded-pill fw-bold" id="currentVerseBadge">
-                            Surah 1 : Ayah 1
+                            Surah {{ $preselectedSurah }} : Ayah {{ $preselectedAyah }}
                         </span>
-                        <span class="text-muted small" id="currentSurahName">Al-Faatiha</span>
+                        <span class="text-muted small" id="currentSurahName">Loading verse...</span>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
@@ -128,15 +141,14 @@
                 <div class="bg-light rounded-4 p-4 text-center mb-3 border position-relative">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <small class="text-muted fst-italic"><i class="bi bi-cursor me-1"></i> Click any word to hear verified Qari audio & practice</small>
-                        <span class="badge bg-white text-muted border" id="verseWordCount">4 words</span>
+                        <span class="badge bg-white text-muted border" id="verseWordCount">-- words</span>
                     </div>
 
                     <div class="quran-verse-text mb-3" id="targetArabicText" style="font-size: 2.2rem; min-height: 80px;">
-                        <!-- Synchronized word spans will be injected here -->
-                        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                        <div class="spinner-border text-emerald spinner-border-sm" role="status"></div> Loading verse...
                     </div>
                     <div class="text-secondary small fst-italic" id="targetTranslationText">
-                        "In the name of Allah, the Entirely Merciful, the Especially Merciful."
+                        Loading translation...
                     </div>
                 </div>
 
@@ -320,6 +332,15 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        var $cfg = $('#aiStudioConfig');
+        var adminRate = parseFloat($cfg.data('rate')) || 0.95;
+        var adminPitch = parseFloat($cfg.data('pitch')) || 1.0;
+        var csrfToken = $cfg.data('csrf') || '';
+        var routeAnalyze = $cfg.data('route-analyze');
+        var routeStartSession = $cfg.data('route-start-session');
+        var routeAnalyzeWord = $cfg.data('route-analyze-word');
+        var routeDeleteSession = $cfg.data('route-delete-session');
+
         var currentSurah = parseInt($('#selectSurah').val()) || 1;
         var currentAyah = parseInt($('#selectAyah').val()) || 1;
         var sessionId = null;
@@ -343,6 +364,7 @@
         function normalizeArabicText(text) {
             if (!text) return '';
             return text.toString()
+                .replace(/[\uFEFF]/g, '')
                 .replace(/[\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g, '')
                 .replace(/[أإآٱ]/g, 'ا')
                 .replace(/ة/g, 'ه')
@@ -612,6 +634,44 @@
             }
         });
 
+        // Surah dropdown change listener
+        $('#selectSurah').on('change', function() {
+            currentSurah = parseInt($(this).val()) || 1;
+            var maxAyahs = parseInt($(this).find(':selected').data('ayahs')) || 286;
+            $('#selectAyah').attr('max', maxAyahs);
+            var currentAyahVal = parseInt($('#selectAyah').val()) || 1;
+            if (currentAyahVal > maxAyahs || currentAyahVal < 1) {
+                currentAyahVal = 1;
+                $('#selectAyah').val(1);
+            }
+            currentAyah = currentAyahVal;
+            loadAyahData(currentSurah, currentAyah);
+        });
+
+        // Ayah input change listener
+        $('#selectAyah').on('change', function() {
+            var maxAyahs = parseInt($('#selectSurah option:selected').data('ayahs')) || 286;
+            var val = parseInt($(this).val()) || 1;
+            if (val < 1) val = 1;
+            if (val > maxAyahs) val = maxAyahs;
+            $(this).val(val);
+            currentAyah = val;
+            currentSurah = parseInt($('#selectSurah').val()) || 1;
+            loadAyahData(currentSurah, currentAyah);
+        });
+
+        // Load Verse Button listener
+        $('#btnLoadAyah').on('click', function() {
+            currentSurah = parseInt($('#selectSurah').val()) || 1;
+            var maxAyahs = parseInt($('#selectSurah option:selected').data('ayahs')) || 286;
+            var val = parseInt($('#selectAyah').val()) || 1;
+            if (val < 1) val = 1;
+            if (val > maxAyahs) val = maxAyahs;
+            $('#selectAyah').val(val);
+            currentAyah = val;
+            loadAyahData(currentSurah, currentAyah);
+        });
+
         // Next Ayah Button
         $('#btnNextAyah').on('click', function() {
             var maxAyahs = parseInt($('#selectSurah option:selected').data('ayahs')) || 286;
@@ -637,9 +697,9 @@
                 return;
             }
             if (confirm('Are you sure you want to delete all practice history and attempts for this session?')) {
-                $.post("{{ route('ai-teacher.delete-session-history') }}", {
+                $.post(routeDeleteSession, {
                     session_id: sessionId,
-                    _token: "{{ csrf_token() }}"
+                    _token: csrfToken
                 }, function(res) {
                     resetAssessmentUI();
                     alert(res.message || 'Session history deleted.');
@@ -708,8 +768,8 @@
                 utterance.lang = 'en-US';
             }
 
-            utterance.rate = 0.95;
-            utterance.pitch = 1.0;
+            utterance.rate = adminRate;
+            utterance.pitch = adminPitch;
 
             // Highlight status during speech
             $('#speechStatusIndicator').html('<i class="bi bi-volume-up-fill text-success me-1"></i> Teacher Speaking...').addClass('bg-success-subtle text-success');
@@ -944,12 +1004,12 @@
             var targetWord = $('#modalTargetWord').text().trim();
             $('#modalMicStatus').text('Analyzing word accuracy...');
 
-            $.post("{{ route('ai-teacher.analyze-word') }}", {
+            $.post(routeAnalyzeWord, {
                 target_word: targetWord,
                 recognized_word: spokenWord,
                 surah_number: currentSurah,
                 ayah_number: currentAyah,
-                _token: "{{ csrf_token() }}"
+                _token: csrfToken
             }, function(res) {
                 var isMatched = res.matched;
                 var score = Math.round(res.similarity * 100);
@@ -992,12 +1052,12 @@
 
         // AJAX: Start a Session
         function startNewSession() {
-            $.post("{{ route('ai-teacher.start-session') }}", {
+            $.post(routeStartSession, {
                 surah_number: currentSurah,
                 start_ayah: currentAyah,
                 end_ayah: currentAyah,
                 session_type: 'recitation',
-                _token: "{{ csrf_token() }}"
+                _token: csrfToken
             }, function(res) {
                 if (res.session_id) {
                     sessionId = res.session_id;
@@ -1011,12 +1071,12 @@
                 startNewSession();
             }
 
-            $.post("{{ route('ai-teacher.analyze') }}", {
+            $.post(routeAnalyze, {
                 session_id: sessionId,
                 surah_number: currentSurah,
                 ayah_number: currentAyah,
                 recognized_text: recognized,
-                _token: "{{ csrf_token() }}"
+                _token: csrfToken
             }, function(res) {
                 displayAssessment(res);
             }).fail(function(xhr) {
@@ -1326,6 +1386,9 @@
             $('#selectedWordCard').addClass('d-none');
             currentMistakes = [];
         }
+
+        // Initial load of the selected Ayah
+        loadAyahData(currentSurah, currentAyah);
     });
 </script>
 @endpush

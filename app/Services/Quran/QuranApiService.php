@@ -19,12 +19,40 @@ class QuranApiService
     }
 
     /**
+     * Clean Arabic text: strip BOM and remove prepended Bismillah from Ayah 1 (Surahs 2-114 except 9).
+     */
+    public function cleanAyahArabicText(int $surahNumber, int $ayahNumber, string $text, string $edition = 'quran-uthmani'): string
+    {
+        // Remove UTF-8 Byte Order Mark (BOM)
+        $text = preg_replace('/^\x{FEFF}/u', '', $text);
+
+        // Strip prepended Bismillah from Ayah 1 for Surahs 2..114 (except Surah 9 which has no Bismillah)
+        if ($surahNumber > 1 && $surahNumber !== 9 && $ayahNumber === 1) {
+            $pattern = '/^(\x{FEFF})?(بِسْمِ[\s\x{0600}-\x{06FF}]+?ٱلرَّحِيمِ|بسم\s+الله\s+الرحمن\s+الرحيم)\s*/u';
+            $text = preg_replace($pattern, '', $text);
+        }
+
+        return trim($text);
+    }
+
+    /**
      * Get a specific Surah with Arabic text.
      */
     public function getSurah(int $surahNumber, string $edition = 'quran-uthmani'): ?array
     {
         $cacheKey = "surah_{$surahNumber}_{$edition}";
-        return $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/{$edition}", 2592000);
+        $data = $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/{$edition}", 2592000);
+
+        if ($data && isset($data['ayahs']) && is_array($data['ayahs'])) {
+            foreach ($data['ayahs'] as &$ayah) {
+                if (isset($ayah['numberInSurah']) && isset($ayah['text'])) {
+                    $ayah['text'] = $this->cleanAyahArabicText($surahNumber, (int) $ayah['numberInSurah'], $ayah['text'], $edition);
+                }
+            }
+            unset($ayah);
+        }
+
+        return $data;
     }
 
     /**
@@ -34,7 +62,24 @@ class QuranApiService
     {
         $editionStr = implode(',', $editions);
         $cacheKey = "surah_multi_{$surahNumber}_" . md5($editionStr);
-        return $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/editions/{$editionStr}", 2592000);
+        $data = $this->cachedRequest($cacheKey, "/surah/{$surahNumber}/editions/{$editionStr}", 2592000);
+
+        if (is_array($data)) {
+            foreach ($data as &$editionData) {
+                $edIdentifier = $editionData['edition']['identifier'] ?? '';
+                if (isset($editionData['ayahs']) && is_array($editionData['ayahs'])) {
+                    foreach ($editionData['ayahs'] as &$ayah) {
+                        if (isset($ayah['numberInSurah']) && isset($ayah['text'])) {
+                            $ayah['text'] = $this->cleanAyahArabicText($surahNumber, (int) $ayah['numberInSurah'], $ayah['text'], $edIdentifier);
+                        }
+                    }
+                    unset($ayah);
+                }
+            }
+            unset($editionData);
+        }
+
+        return $data;
     }
 
     /**
@@ -44,7 +89,13 @@ class QuranApiService
     {
         $reference = "{$surahNumber}:{$ayahNumber}";
         $cacheKey = "ayah_{$reference}_{$edition}";
-        return $this->cachedRequest($cacheKey, "/ayah/{$reference}/{$edition}", 86400);
+        $data = $this->cachedRequest($cacheKey, "/ayah/{$reference}/{$edition}", 86400);
+
+        if ($data && isset($data['text'])) {
+            $data['text'] = $this->cleanAyahArabicText($surahNumber, $ayahNumber, $data['text'], $edition);
+        }
+
+        return $data;
     }
 
     /**
@@ -64,7 +115,19 @@ class QuranApiService
         $reference = "{$surahNumber}:{$ayahNumber}";
         $editionStr = implode(',', $editions);
         $cacheKey = "ayah_editions_{$reference}_{$editionStr}";
-        return $this->cachedRequest($cacheKey, "/ayah/{$reference}/editions/{$editionStr}", 86400);
+        $data = $this->cachedRequest($cacheKey, "/ayah/{$reference}/editions/{$editionStr}", 86400);
+
+        if (is_array($data)) {
+            foreach ($data as &$editionData) {
+                $edIdentifier = $editionData['edition']['identifier'] ?? '';
+                if (isset($editionData['text'])) {
+                    $editionData['text'] = $this->cleanAyahArabicText($surahNumber, $ayahNumber, $editionData['text'], $edIdentifier);
+                }
+            }
+            unset($editionData);
+        }
+
+        return $data;
     }
 
     /**
