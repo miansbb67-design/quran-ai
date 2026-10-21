@@ -90,6 +90,12 @@ class SettingsController extends Controller
             'enable_user_registration' => ['nullable', 'boolean'],
             'enable_voice_recognition' => ['nullable', 'boolean'],
             'maintenance_mode' => ['nullable', 'boolean'],
+            'google_analytics_id' => ['nullable', 'string', 'max:50'],
+            'google_tag_manager_id' => ['nullable', 'string', 'max:50'],
+            'enable_google_analytics' => ['nullable', 'boolean'],
+            'seo_meta_title' => ['nullable', 'string', 'max:150'],
+            'seo_meta_description' => ['nullable', 'string', 'max:300'],
+            'seo_meta_keywords' => ['nullable', 'string', 'max:255'],
         ]);
 
         if (!empty($validated['custom_reciter'])) {
@@ -102,6 +108,7 @@ class SettingsController extends Controller
             'maintenance_mode',
             'enable_teacher_auto_speech',
             'allow_student_reciter_change',
+            'enable_google_analytics',
         ];
         foreach ($booleanFields as $field) {
             $validated[$field] = $request->has($field) ? '1' : '0';

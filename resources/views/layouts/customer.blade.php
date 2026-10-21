@@ -15,6 +15,21 @@
     <!-- Chart.js 4.4 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    @php
+        $gaEnabled = \App\Models\SiteSetting::getValue('enable_google_analytics', false);
+        $gaId = \App\Models\SiteSetting::getValue('google_analytics_id', '');
+    @endphp
+    @if($gaEnabled && !empty($gaId))
+        <!-- Google Analytics 4 (GA4) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ $gaId }}');
+        </script>
+    @endif
+
     @stack('styles')
 </head>
 <body class="bg-sand min-vh-100 d-flex flex-column">

@@ -527,3 +527,118 @@ body {
     border-color: #10b981 !important;
     box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.22) !important;
 }
+
+/* ==========================================================================
+   Executive Islamic Admin Console Styling & Palette
+   ========================================================================== */
+.admin-sidebar {
+    background: linear-gradient(180deg, #031c16 0%, #062b22 65%, #02140f 100%) !important;
+    border-right: 1px solid rgba(16, 185, 129, 0.18) !important;
+    width: 270px;
+    min-width: 270px;
+    box-shadow: 4px 0 24px rgba(2, 20, 15, 0.25);
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.72rem 1rem;
+    border-radius: 0.85rem;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 0.3rem;
+}
+
+.admin-nav-link i {
+    font-size: 1.15rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.admin-nav-link:hover {
+    color: #ecfdf5 !important;
+    background: rgba(16, 185, 129, 0.12);
+    transform: translateX(4px);
+}
+
+.admin-nav-link:hover i {
+    color: #34d399;
+}
+
+.admin-nav-link.active {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.38);
+}
+
+.admin-nav-link.active i {
+    color: #ffffff !important;
+}
+
+.admin-nav-heading {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    color: #10b981;
+    margin: 1.25rem 0 0.5rem 0.5rem;
+    opacity: 0.85;
+}
+
+.admin-topbar {
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.15) !important;
+}
+
+.admin-badge-live {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: #ffffff;
+    font-size: 0.72rem;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+}
+
+.pulse-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #34d399;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% {
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    }
+}
+
+.admin-stat-card {
+    border-radius: 1.15rem;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 4px 18px rgba(6, 78, 59, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(6, 78, 59, 0.09);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+

@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ContentController as AdminContentController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
+use App\Http\Controllers\Admin\HadithController as AdminHadithController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,6 +116,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
         Route::post('/announcements', [AdminContentController::class, 'storeAnnouncement'])->name('announcements.store');
         Route::put('/announcements/{announcement}', [AdminContentController::class, 'updateAnnouncement'])->name('announcements.update');
         Route::delete('/announcements/{announcement}', [AdminContentController::class, 'destroyAnnouncement'])->name('announcements.destroy');
+    });
+
+    // Web & Google Analytics
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/', [AdminAnalyticsController::class, 'index'])->name('index');
+        Route::post('/config', [AdminAnalyticsController::class, 'updateConfig'])->name('config.update');
+    });
+
+    // Hadith Management
+    Route::prefix('hadiths')->name('hadiths.')->group(function () {
+        Route::get('/', [AdminHadithController::class, 'index'])->name('index');
+        Route::post('/', [AdminHadithController::class, 'store'])->name('store');
+        Route::put('/{hadith}', [AdminHadithController::class, 'update'])->name('update');
+        Route::delete('/{hadith}', [AdminHadithController::class, 'destroy'])->name('destroy');
     });
 
     // System Settings & API Logs

@@ -392,4 +392,77 @@ class QuranAiPlatformTest extends TestCase
         $searchResponse->assertStatus(200);
         $searchResponse->assertSee('Sahih al-Bukhari 5027');
     }
+
+    /**
+     * Test that admin can access Google and Web Analytics dashboard.
+     */
+    public function test_admin_can_access_analytics_page(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/analytics');
+        $response->assertStatus(200);
+        $response->assertSee('Google Analytics 4');
+        $response->assertSee('Daily Practice');
+    }
+
+    /**
+     * Test that admin can update Google Analytics configuration.
+     */
+    public function test_admin_can_update_google_analytics_config(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)->post('/admin/analytics/config', [
+            'google_analytics_id' => 'G-TEST999999',
+            'google_tag_manager_id' => 'GTM-TEST123',
+            'enable_google_analytics' => '1',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertEquals('G-TEST999999', \App\Models\SiteSetting::getValue('google_analytics_id'));
+        $this->assertEquals('GTM-TEST123', \App\Models\SiteSetting::getValue('google_tag_manager_id'));
+        $this->assertTrue((bool) \App\Models\SiteSetting::getValue('enable_google_analytics'));
+    }
+
+    /**
+     * Test that admin can manage Hadiths collection.
+     */
+    public function test_admin_can_manage_hadiths(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        // View hadiths manager
+        $response = $this->actingAs($admin)->get('/admin/hadiths');
+        $response->assertStatus(200);
+        $response->assertSee('Hadith Collection Manager');
+
+        // Create new hadith
+        $createResponse = $this->actingAs($admin)->post('/admin/hadiths', [
+            'book' => 'Sunan Abi Dawud',
+            'hadith_number' => '1464',
+            'chapter' => 'Recitation with pleasant voice',
+            'narrator' => 'Al-Bara ibn Azib',
+            'category' => 'Quran Virtues',
+            'arabic' => 'زَيِّنُوا الْقُرْآنَ بِأَصْوَاتِكُمْ',
+            'english' => 'Beautify the Quran with your voices.',
+            'urdu' => 'اپنی آوازوں سے قرآن کو زینت بخشو۔',
+        ]);
+
+        $createResponse->assertRedirect();
+        $this->assertDatabaseHas('hadiths', [
+            'arabic_text' => 'زَيِّنُوا الْقُرْآنَ بِأَصْوَاتِكُمْ',
+            'source_book' => 'Sunan Abi Dawud',
+        ]);
+    }
 }
+

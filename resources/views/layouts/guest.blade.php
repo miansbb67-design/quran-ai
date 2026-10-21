@@ -13,6 +13,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Custom Design System -->
     <link rel="stylesheet" href="{{ asset('css/quran-app.css') }}">
+
+    @php
+        $gaEnabled = \App\Models\SiteSetting::getValue('enable_google_analytics', false);
+        $gaId = \App\Models\SiteSetting::getValue('google_analytics_id', '');
+    @endphp
+    @if($gaEnabled && !empty($gaId))
+        <!-- Google Analytics 4 (GA4) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ $gaId }}');
+        </script>
+    @endif
 </head>
 <body class="min-vh-100 d-flex flex-column justify-content-center py-5" style="background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, #f8fafc 75%);">
     <div class="container">

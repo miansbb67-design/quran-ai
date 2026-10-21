@@ -232,6 +232,50 @@
                         </div>
                     </div>
 
+                    <!-- Google Analytics & Traffic Intelligence -->
+                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">
+                        <i class="bi bi-google text-gold me-1"></i> Google Analytics (GA4) & Tracking Suite
+                    </h6>
+                    <div class="row g-3 mb-4 bg-light p-3 rounded-4 border">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">GA4 Measurement ID</label>
+                            <input type="text" name="google_analytics_id" class="form-control" value="{{ $settings['google_analytics_id'] ?? '' }}" placeholder="G-XXXXXXXXXX">
+                            <small class="text-muted d-block mt-1">Official Google Analytics 4 Measurement ID</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">GTM Container ID (Optional)</label>
+                            <input type="text" name="google_tag_manager_id" class="form-control" value="{{ $settings['google_tag_manager_id'] ?? '' }}" placeholder="GTM-XXXXXXX">
+                            <small class="text-muted d-block mt-1">Google Tag Manager Container</small>
+                        </div>
+                        <div class="col-12 pt-1 border-top">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" name="enable_google_analytics" value="1" id="gaSwitch" {{ ($settings['enable_google_analytics'] ?? '0') == '1' ? 'checked' : '' }}>
+                                <label class="form-check-label small fw-semibold text-dark" for="gaSwitch">
+                                    Enable Real-time Google Analytics Tracking Script
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO & Search Engine Optimization -->
+                    <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">
+                        <i class="bi bi-search text-emerald me-1"></i> SEO & Search Metadata
+                    </h6>
+                    <div class="row g-3 mb-4 bg-light p-3 rounded-4 border">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Default Meta Title</label>
+                            <input type="text" name="seo_meta_title" class="form-control" value="{{ $settings['seo_meta_title'] ?? 'Bayan AI Quran Teacher - Recite, Memorize, Learn Tajweed' }}" placeholder="Meta Title for search engines">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Default Meta Description</label>
+                            <textarea name="seo_meta_description" class="form-control" rows="2" placeholder="Search snippet description">{{ $settings['seo_meta_description'] ?? 'AI-powered Quran recitation analysis, interactive tajweed error detection, authentic Hadith library, and Hifz memorization tracker.' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Meta Keywords</label>
+                            <input type="text" name="seo_meta_keywords" class="form-control" value="{{ $settings['seo_meta_keywords'] ?? 'quran ai, learn quran, tajweed voice, hadith, hifz tracker' }}" placeholder="Comma separated keywords">
+                        </div>
+                    </div>
+
                     <!-- Feature Toggles -->
                     <h6 class="fw-bold text-emerald mb-3 text-uppercase small" style="letter-spacing: 1px;">Feature Toggles</h6>
                     <div class="p-3 bg-light rounded-4 border mb-4 d-flex flex-column gap-2">
