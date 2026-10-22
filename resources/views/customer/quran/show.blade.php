@@ -67,9 +67,9 @@
 
                 @if($nextSurahNum)
                     <!-- Auto-Play Next Surah Switch -->
-                    <div class="form-check form-switch d-inline-flex align-items-center gap-2 mb-0 bg-light rounded-pill border px-3 py-1 shadow-2xs" title="Automatically play next Surah when this one finishes">
-                        <input class="form-check-input mt-0 cursor-pointer" type="checkbox" id="autoPlayNextSurah">
-                        <label class="form-check-label small fw-semibold text-emerald text-nowrap cursor-pointer mb-0" for="autoPlayNextSurah">
+                    <div class="d-inline-flex align-items-center gap-2 bg-light rounded-pill border px-3 py-1 shadow-2xs ms-1" title="Automatically play next Surah when this one finishes" style="height: 34px;">
+                        <input class="form-check-input m-0 cursor-pointer" type="checkbox" id="autoPlayNextSurah" style="cursor: pointer; width: 2.1em; height: 1.15em; float: none;">
+                        <label class="small fw-semibold text-emerald text-nowrap cursor-pointer mb-0" for="autoPlayNextSurah" style="user-select: none;">
                             <i class="bi bi-collection-play-fill text-gold me-1"></i> Auto-Next
                         </label>
                     </div>
