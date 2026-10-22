@@ -108,8 +108,18 @@
                 <i class="bi bi-graph-up me-1"></i> View Full Web Analytics
             </a>
         </div>
+        @php
+            $chartLabels = [];
+            $chartTotals = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subDays($i)->format('Y-m-d');
+                $chartLabels[] = now()->subDays($i)->format('D, M d');
+                $found = $dailySessions->firstWhere('date', $date);
+                $chartTotals[] = $found ? $found->total : 0;
+            }
+        @endphp
         <div style="height: 260px; position: relative;">
-            <canvas id="overviewActivityChart"></canvas>
+            <canvas id="overviewActivityChart" data-labels="{{ json_encode($chartLabels) }}" data-totals="{{ json_encode($chartTotals) }}"></canvas>
         </div>
     </div>
 
@@ -209,20 +219,12 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById('overviewActivityChart').getContext('2d');
-    @php
-        $chartLabels = [];
-        $chartTotals = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $chartLabels[] = now()->subDays($i)->format('D, M d');
-            $found = $dailySessions->firstWhere('date', $date);
-            $chartTotals[] = $found ? $found->total : 0;
-        }
-    @endphp
+    const canvas = document.getElementById('overviewActivityChart');
+    if (!canvas) return;
 
-    const labels = {!! json_encode($chartLabels) !!};
-    const totals = {!! json_encode($chartTotals) !!};
+    const ctx = canvas.getContext('2d');
+    const labels = JSON.parse(canvas.getAttribute('data-labels') || '[]');
+    const totals = JSON.parse(canvas.getAttribute('data-totals') || '[]');
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 240);
     gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');

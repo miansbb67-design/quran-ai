@@ -112,7 +112,7 @@
                     <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">Last 14 Days</span>
                 </div>
                 <div style="height: 310px; position: relative;">
-                    <canvas id="trafficTrendChart"></canvas>
+                    <canvas id="trafficTrendChart" data-dates="{{ json_encode($dates) }}" data-sessions="{{ json_encode($sessionsData) }}" data-scores="{{ json_encode($scoresData) }}"></canvas>
                 </div>
             </div>
         </div>
@@ -125,7 +125,7 @@
                     <span class="badge bg-light text-muted border">Platform</span>
                 </div>
                 <div style="height: 220px; position: relative;" class="my-auto">
-                    <canvas id="deviceChart"></canvas>
+                    <canvas id="deviceChart" data-mobile="{{ $devices['mobile'] }}" data-desktop="{{ $devices['desktop'] }}" data-tablet="{{ $devices['tablet'] }}"></canvas>
                 </div>
                 <div class="d-flex justify-content-around text-center border-top pt-3 mt-3">
                     <div>
@@ -289,10 +289,13 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // 14-Day Activity Chart
-    const ctx = document.getElementById('trafficTrendChart').getContext('2d');
-    const dates = {!! json_encode($dates) !!};
-    const sessions = {!! json_encode($sessionsData) !!};
-    const scores = {!! json_encode($scoresData) !!};
+    const canvasTrend = document.getElementById('trafficTrendChart');
+    if (!canvasTrend) return;
+
+    const ctx = canvasTrend.getContext('2d');
+    const dates = JSON.parse(canvasTrend.getAttribute('data-dates') || '[]');
+    const sessions = JSON.parse(canvasTrend.getAttribute('data-sessions') || '[]');
+    const scores = JSON.parse(canvasTrend.getAttribute('data-scores') || '[]');
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
@@ -373,13 +376,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Device Split Donut Chart
-    const ctxDevice = document.getElementById('deviceChart').getContext('2d');
+    const canvasDevice = document.getElementById('deviceChart');
+    if (!canvasDevice) return;
+
+    const ctxDevice = canvasDevice.getContext('2d');
+    const mobileCount = Number(canvasDevice.getAttribute('data-mobile')) || 0;
+    const desktopCount = Number(canvasDevice.getAttribute('data-desktop')) || 0;
+    const tabletCount = Number(canvasDevice.getAttribute('data-tablet')) || 0;
+
     new Chart(ctxDevice, {
         type: 'doughnut',
         data: {
             labels: ['Mobile', 'Desktop', 'Tablet'],
             datasets: [{
-                data: [{{ $devices['mobile'] }}, {{ $devices['desktop'] }}, {{ $devices['tablet'] }}],
+                data: [mobileCount, desktopCount, tabletCount],
                 backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
                 borderWidth: 2,
                 borderColor: '#ffffff'
