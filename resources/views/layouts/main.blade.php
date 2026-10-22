@@ -66,11 +66,6 @@
 
                 <div class="d-flex align-items-center gap-2">
                     @auth
-                        @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-dark text-warning border-warning px-3 rounded-pill shadow-sm">
-                                <i class="bi bi-shield-lock-fill me-1"></i> Admin Panel
-                            </a>
-                        @endif
                         <a href="{{ route('dashboard') }}" class="btn btn-emerald px-4 rounded-pill">
                             <i class="bi bi-grid-fill me-1"></i> Dashboard
                         </a>

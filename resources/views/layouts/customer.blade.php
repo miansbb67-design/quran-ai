@@ -136,12 +136,6 @@
                         <span><strong>{{ $streak }}</strong> Day Streak</span>
                     </div>
 
-                    @if(Auth::user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-dark text-warning border-warning d-inline-flex align-items-center gap-1 rounded-pill shadow-sm px-3">
-                            <i class="bi bi-shield-lock-fill"></i>
-                            <span>Admin Panel</span>
-                        </a>
-                    @endif
 
                     <a href="{{ route('home') }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1 rounded-pill" target="_blank">
                         <i class="bi bi-box-arrow-up-right"></i>
@@ -164,9 +158,6 @@
                             </li>
                             <li><a class="dropdown-item py-2" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> Profile Settings</a></li>
                             <li><a class="dropdown-item py-2" href="{{ route('progress.index') }}"><i class="bi bi-graph-up me-2"></i> Learning Statistics</a></li>
-                            @if(Auth::user()->isAdmin())
-                                <li><a class="dropdown-item py-2 text-warning bg-dark rounded-2 mx-2 mb-1" style="width: auto;" href="{{ route('admin.dashboard') }}"><i class="bi bi-shield-lock-fill me-2 text-warning"></i> Admin Panel</a></li>
-                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
