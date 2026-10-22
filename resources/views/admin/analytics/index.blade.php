@@ -260,9 +260,11 @@
                         <small class="text-muted d-block mt-1">Use if you prefer managing tags via Tag Manager.</small>
                     </div>
 
-                    <div class="form-check form-switch p-3 bg-light rounded-3 border mb-3">
-                        <input class="form-check-input" type="checkbox" name="enable_google_analytics" id="enableGaToggle" value="1" {{ $gaEnabled ? 'checked' : '' }}>
-                        <label class="form-check-label fw-semibold text-dark small" for="enableGaToggle">
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-3">
+                        <div class="form-check form-switch m-0 p-0 d-flex align-items-center">
+                            <input class="form-check-input m-0 cursor-pointer" type="checkbox" name="enable_google_analytics" id="enableGaToggle" value="1" {{ $gaEnabled ? 'checked' : '' }} style="cursor: pointer; width: 2.3em; height: 1.25em; float: none;">
+                        </div>
+                        <label class="form-check-label fw-semibold text-dark small mb-0 cursor-pointer" for="enableGaToggle" style="cursor: pointer; user-select: none;">
                             Enable Google Analytics tracking script across application
                         </label>
                     </div>
