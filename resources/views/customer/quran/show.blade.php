@@ -4,6 +4,18 @@
 @section('page_title', ($surah['englishName'] ?? 'Surah ' . $surahNumber) . ' (' . ($surah['name'] ?? '') . ')')
 
 @section('content')
+@php
+    $nextSurahNum = $surahNumber < 114 ? $surahNumber + 1 : null;
+    $nextSurahName = '';
+    if ($nextSurahNum && is_array($surahs)) {
+        foreach($surahs as $s) {
+            if ($s['number'] == $nextSurahNum) {
+                $nextSurahName = $s['englishName'] . ' (' . ($s['name'] ?? '') . ')';
+                break;
+            }
+        }
+    }
+@endphp
 <div class="container-fluid p-0">
 
     <!-- Top Navigation Toolbar -->
@@ -52,6 +64,16 @@
                         <i class="bi bi-arrow-counterclockwise"></i>
                     </button>
                 </div>
+
+                @if($nextSurahNum)
+                    <!-- Auto-Play Next Surah Switch -->
+                    <div class="form-check form-switch d-inline-flex align-items-center gap-2 mb-0 bg-light rounded-pill border px-3 py-1 shadow-2xs" title="Automatically play next Surah when this one finishes">
+                        <input class="form-check-input mt-0 cursor-pointer" type="checkbox" id="autoPlayNextSurah">
+                        <label class="form-check-label small fw-semibold text-emerald text-nowrap cursor-pointer mb-0" for="autoPlayNextSurah">
+                            <i class="bi bi-collection-play-fill text-gold me-1"></i> Auto-Next
+                        </label>
+                    </div>
+                @endif
 
                 <a href="{{ route('ai-teacher.index', ['surah' => $surahNumber, 'ayah' => 1]) }}" class="btn btn-sm btn-emerald rounded-pill px-3 d-inline-flex align-items-center gap-1">
                     <i class="bi bi-mic-fill text-gold"></i>
@@ -167,6 +189,29 @@
     </div>
 </div>
 
+<!-- Fixed Floating Next Surah Autoplay Notification Toast -->
+<div id="nextSurahNotification" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 p-3 rounded-4 shadow-lg text-white border d-none" style="z-index: 1099; min-width: 330px; max-width: 90vw; background: linear-gradient(135deg, #022c22 0%, #064e3b 100%); border-color: #d97706 !important;">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3 text-start">
+            <span class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 36px; height: 36px; min-width: 36px;">
+                <i class="bi bi-check-lg fs-5"></i>
+            </span>
+            <div>
+                <strong class="d-block small text-warning">Surah {{ $surah['englishName'] ?? $surahNumber }} Completed!</strong>
+                <small class="text-white-50">Playing next: <span class="text-white fw-bold">{{ $nextSurahName ?: ('Surah ' . $nextSurahNum) }}</span> in <span id="nextSurahCountdown" class="badge bg-gold text-dark fw-bold">2</span>s</small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-1 ms-auto">
+            <button type="button" id="btnPlayNextSurahNow" class="btn btn-sm btn-gold rounded-pill px-3 py-1 fw-bold shadow-sm" style="font-size: 0.75rem;">
+                Play Now
+            </button>
+            <button type="button" id="cancelNextSurahBtn" class="btn btn-sm btn-outline-light rounded-pill px-2 py-1 small" style="font-size: 0.72rem;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     $(document).ready(function() {
@@ -182,10 +227,48 @@
         var serverSavedAyah = {{ $savedAyahNumber ?? 1 }};
         var localSavedAyah = parseInt(localStorage.getItem(storageKeyAyah), 10);
 
+        // Next Surah Autoplay Variables
+        var nextSurahNumber = {{ $nextSurahNum ?? 0 }};
+        var nextSurahUrl = "{{ $nextSurahNum ? route('quran.show', $nextSurahNum) : '' }}";
+        var autoPlayStorageKey = 'quran_autoplay_next_surah';
+
+        // Auto-Play Next preference initialization (default: ON)
+        var autoPlayPrefServer = {{ ($prefs->auto_play_next ?? true) ? 'true' : 'false' }};
+        var autoPlayLocal = localStorage.getItem(autoPlayStorageKey);
+        var isAutoPlayNextEnabled = (autoPlayLocal !== null) ? (autoPlayLocal === 'true') : autoPlayPrefServer;
+        $('#autoPlayNextSurah').prop('checked', isAutoPlayNextEnabled);
+
+        $('#autoPlayNextSurah').on('change', function() {
+            isAutoPlayNextEnabled = $(this).is(':checked');
+            localStorage.setItem(autoPlayStorageKey, isAutoPlayNextEnabled);
+            $.post("{{ route('quran.preferences.update') }}", {
+                auto_play_next: isAutoPlayNextEnabled ? 1 : 0,
+                _token: "{{ csrf_token() }}"
+            });
+        });
+
         // Determine starting Ayah (priority: local browser memory -> database saved progress -> 1)
         var currentAyahIndex = (localSavedAyah && localSavedAyah >= 1 && localSavedAyah <= totalAyahs)
             ? localSavedAyah
             : ((serverSavedAyah >= 1 && serverSavedAyah <= totalAyahs) ? serverSavedAyah : 1);
+
+        // If navigated here via Auto-Play from previous Surah, begin playing immediately from Ayah 1
+        var urlParams = new URLSearchParams(window.location.search);
+        var autoPlayRequested = urlParams.get('autoplay') === '1' || sessionStorage.getItem('quran_autoplay_next_session') === '1';
+
+        if (autoPlayRequested) {
+            sessionStorage.removeItem('quran_autoplay_next_session');
+            if (window.history.replaceState) {
+                var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+            }
+            currentAyahIndex = 1;
+            isPlayingContinuous = true;
+            updatePlayButtonState();
+            setTimeout(function() {
+                playCurrentIndex();
+            }, 500);
+        }
 
         // Update button UI & icons
         function updatePlayButtonState() {
@@ -393,6 +476,11 @@
                     playCurrentIndex();
                 } else if (currentAyahIndex >= totalAyahs) {
                     // Full Surah finished
+                    if (isPlayingContinuous && isAutoPlayNextEnabled && nextSurahNumber > 0 && nextSurahNumber <= 114) {
+                        triggerNextSurahAutoPlay();
+                        return;
+                    }
+
                     isPlayingContinuous = false;
                     currentAyahIndex = 1;
                     localStorage.setItem(storageKeyAyah, 1);
@@ -405,6 +493,41 @@
                     markStoppedAyahBadge(currentAyahIndex);
                 }
             };
+        }
+
+        // Auto-play Next Surah Transition & Countdown
+        var nextSurahTimer = null;
+        function triggerNextSurahAutoPlay() {
+            $('#nextSurahNotification').removeClass('d-none');
+            var secondsLeft = 2;
+            $('#nextSurahCountdown').text(secondsLeft);
+
+            function goToNextSurah() {
+                if (nextSurahTimer) clearInterval(nextSurahTimer);
+                sessionStorage.setItem('quran_autoplay_next_session', '1');
+                window.location.href = nextSurahUrl + '?autoplay=1';
+            }
+
+            nextSurahTimer = setInterval(function() {
+                secondsLeft--;
+                $('#nextSurahCountdown').text(secondsLeft);
+                if (secondsLeft <= 0) {
+                    goToNextSurah();
+                }
+            }, 1000);
+
+            $('#btnPlayNextSurahNow').off('click').on('click', function() {
+                goToNextSurah();
+            });
+
+            $('#cancelNextSurahBtn').off('click').on('click', function() {
+                if (nextSurahTimer) clearInterval(nextSurahTimer);
+                $('#nextSurahNotification').addClass('d-none');
+                isPlayingContinuous = false;
+                currentAyahIndex = 1;
+                updatePlayButtonState();
+                $('#audioToggleIcon').removeClass('bi-pause-fill').addClass('bi-play-fill');
+            });
         }
 
         // Floating Player Toggle (Play / Pause)

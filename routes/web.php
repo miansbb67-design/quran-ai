@@ -43,6 +43,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/{surahNumber}/{ayahNumber}', [QuranController::class, 'getAyah'])->name('ayah');
         Route::post('/bookmark', [QuranController::class, 'toggleBookmark'])->name('bookmark.toggle');
         Route::post('/progress', [QuranController::class, 'updateProgress'])->name('progress.update');
+        Route::post('/preferences', [QuranController::class, 'updatePreferences'])->name('preferences.update');
     });
 
     // AI Quran Teacher

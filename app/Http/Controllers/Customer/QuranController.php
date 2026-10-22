@@ -203,4 +203,23 @@ class QuranController extends Controller
 
         return view('customer.quran.bookmarks', compact('bookmarks'));
     }
+
+    /**
+     * Update user reading & playback preferences via AJAX.
+     */
+    public function updatePreferences(Request $request)
+    {
+        $prefs = UserPreference::firstOrCreate(['user_id' => $request->user()->id]);
+
+        if ($request->has('auto_play_next')) {
+            $prefs->auto_play_next = (bool) $request->auto_play_next;
+        }
+
+        $prefs->save();
+
+        return response()->json([
+            'success' => true,
+            'auto_play_next' => (bool) $prefs->auto_play_next
+        ]);
+    }
 }
