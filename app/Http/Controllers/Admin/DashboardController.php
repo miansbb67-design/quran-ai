@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function index()
     {
         $totalUsers = User::where('role', 'user')->count();
-        $totalAdmins = User::whereIn('role', ['admin', 'owner'])->count();
+        $totalAdmins = User::where('role', 'admin')->count();
         $activeUsers = User::where('status', 'active')->count();
         $suspendedUsers = User::where('status', 'suspended')->count();
 

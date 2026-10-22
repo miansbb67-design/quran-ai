@@ -19,9 +19,8 @@
             <div class="col-md-3 col-6">
                 <select name="role" class="form-select">
                     <option value="">All Roles</option>
-                    <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>Student (User)</option>
+                    <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>Student</option>
                     <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
-                    <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Platform Owner</option>
                 </select>
             </div>
 
@@ -77,9 +76,15 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge {{ $user->isOwner() ? 'bg-danger' : ($user->isAdmin() ? 'bg-warning text-dark' : 'bg-light text-muted border') }}">
-                                    {{ ucfirst($user->role) }}
-                                </span>
+                                @if($user->isAdmin())
+                                    <span class="badge bg-warning text-dark px-2 py-1">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> Admin
+                                    </span>
+                                @else
+                                    <span class="badge bg-light text-dark border px-2 py-1">
+                                        <i class="bi bi-mortarboard-fill text-emerald me-1"></i> Student
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge {{ $user->isActive() ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }}">
@@ -149,11 +154,8 @@
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Role</label>
                         <select name="role" id="editUserRole" class="form-select" required>
-                            <option value="user">Student (User)</option>
+                            <option value="user">Student</option>
                             <option value="admin">Administrator</option>
-                            @if(Auth::user()->isOwner())
-                                <option value="owner">Platform Owner</option>
-                            @endif
                         </select>
                     </div>
 

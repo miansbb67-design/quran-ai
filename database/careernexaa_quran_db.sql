@@ -768,7 +768,7 @@ CREATE TABLE `user_preferences` (
 
 LOCK TABLES `user_preferences` WRITE;
 /*!40000 ALTER TABLE `user_preferences` DISABLE KEYS */;
-INSERT INTO `user_preferences` VALUES (1,3,'ar.alafasy','en.asad',1,1,20,10,1.00,1,'light','2026-10-19 00:28:57','2026-10-19 00:28:57'),(2,1,'ar.alafasy','en.asad',1,1,15,5,1.00,0,'light','2026-10-19 05:32:52','2026-10-19 05:32:52'),(3,2,'ar.alafasy','en.asad',1,1,15,5,1.00,0,'light','2026-10-21 06:13:50','2026-10-21 06:13:50');
+INSERT INTO `user_preferences` VALUES (1,3,'ar.alafasy','en.asad',1,1,20,10,1.00,1,'light','2026-10-19 00:28:57','2026-10-19 00:28:57'),(2,1,'ar.alafasy','en.asad',1,1,15,5,1.00,0,'light','2026-10-19 05:32:52','2026-10-19 05:32:52');
 /*!40000 ALTER TABLE `user_preferences` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -785,7 +785,7 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('user','admin','owner') NOT NULL DEFAULT 'user',
+  `role` enum('user','admin') NOT NULL DEFAULT 'user',
   `status` enum('active','suspended') NOT NULL DEFAULT 'active',
   `remember_token` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -801,7 +801,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Platform Owner','owner@quran-ai.com','2026-10-19 00:29:38','$2y$12$.5rnQVcIgM33NV6x1hebPO6iwgki7WOkQOLc1hvCB3yk1eVsZ4D7e','owner','active','CRMCudXkqSk9mZzTYnCHeYRqOFyZboxJuj0jIN24LTSzpYY4FctCrC9i5kv2','2026-10-19 00:28:57','2026-10-19 00:29:38'),(2,'Lead Teacher Admin','admin@quran-ai.com','2026-10-19 00:29:38','$2y$12$qZhlcQzmIZLnUkHZdmils.ZnJaSjbXUN8tb8mbd1mKeBkoQuZ5mL.','admin','active','JDbOSGFsplhVFIzfd76o2hGrOdYERqxTY3CR6DfvruvjDSm2KnoLxrjd2cgM','2026-10-19 00:28:57','2026-10-19 00:29:38'),(3,'Demo Student','student@quran-ai.com','2026-10-19 00:29:38','$2y$12$kp6NakPNNTNl3GInulDTRumjx0vZXq86QMtI5icc/mt8QcR1RvbH.','user','active','pwFSa4rAH7rCK97UgXVOgy4N6A4lSbOXp1MgFmZH57NFZVYKMBfbdnB6VWsD','2026-10-19 00:28:57','2026-10-19 00:29:38');
+INSERT INTO `users` VALUES (1,'Administrator','admin@quran-ai.com','2026-10-19 00:29:38','$2y$12$qZhlcQzmIZLnUkHZdmils.ZnJaSjbXUN8tb8mbd1mKeBkoQuZ5mL.','admin','active','JDbOSGFsplhVFIzfd76o2hGrOdYERqxTY3CR6DfvruvjDSm2KnoLxrjd2cgM','2026-10-19 00:28:57','2026-10-19 00:29:38'),(3,'Demo Student','student@quran-ai.com','2026-10-19 00:29:38','$2y$12$kp6NakPNNTNl3GInulDTRumjx0vZXq86QMtI5icc/mt8QcR1RvbH.','user','active','pwFSa4rAH7rCK97UgXVOgy4N6A4lSbOXp1MgFmZH57NFZVYKMBfbdnB6VWsD','2026-10-19 00:28:57','2026-10-19 00:29:38');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

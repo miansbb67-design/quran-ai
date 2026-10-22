@@ -53,7 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isOwner(): bool
     {
-        return $this->role === 'owner';
+        return false;
     }
 
     public function isAdmin(): bool
@@ -61,9 +61,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return in_array($this->role, ['admin', 'owner']);
     }
 
+    public function isStudent(): bool
+    {
+        return in_array($this->role, ['user', 'student']);
+    }
+
     public function isUser(): bool
     {
-        return $this->role === 'user';
+        return $this->isStudent();
     }
 
     public function isActive(): bool

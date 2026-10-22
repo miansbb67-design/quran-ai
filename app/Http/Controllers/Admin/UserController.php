@@ -67,22 +67,12 @@ class UserController extends Controller
             return back()->with('error', 'You cannot modify your own role or status from here.');
         }
 
-        // Only owners can promote/demote owners or admins
-        if ($user->isOwner() && !$authUser->isOwner()) {
-            return back()->with('error', 'Only platform owners can modify an owner account.');
-        }
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(['user', 'admin', 'owner'])],
+            'role' => ['required', Rule::in(['user', 'admin'])],
             'status' => ['required', Rule::in(['active', 'suspended'])],
         ]);
-
-        // If promoting to owner, must be owner
-        if ($validated['role'] === 'owner' && !$authUser->isOwner()) {
-            return back()->with('error', 'Only owners can assign the owner role.');
-        }
 
         $oldRole = $user->role;
         $oldStatus = $user->status;
@@ -110,14 +100,6 @@ class UserController extends Controller
 
         if ($authUser->id === $user->id) {
             return back()->with('error', 'You cannot delete your own account.');
-        }
-
-        if ($user->isOwner()) {
-            return back()->with('error', 'Owner accounts cannot be deleted.');
-        }
-
-        if ($user->isAdmin() && !$authUser->isOwner()) {
-            return back()->with('error', 'Only owners can delete administrator accounts.');
         }
 
         $userName = $user->name;

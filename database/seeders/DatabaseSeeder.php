@@ -25,17 +25,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed Platform Users
-        $owner = User::updateOrCreate(
-            ['email' => 'owner@quran-ai.com'],
-            [
-                'name' => 'Platform Owner',
-                'password' => Hash::make('Password123!'),
-                'role' => 'owner',
-                'status' => 'active',
-                'email_verified_at' => now(),
-            ]
-        );
+        // 1. Seed Platform Users (Admin and Student)
 
         $admin = User::updateOrCreate(
             ['email' => 'admin@quran-ai.com'],

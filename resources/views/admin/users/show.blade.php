@@ -23,9 +23,15 @@
                 <p class="text-muted small mb-3">{{ $user->email }}</p>
 
                 <div class="d-flex justify-content-center gap-2 mb-4">
-                    <span class="badge {{ $user->isOwner() ? 'bg-danger' : ($user->isAdmin() ? 'bg-warning text-dark' : 'bg-light text-muted border') }} px-3 py-2">
-                        {{ ucfirst($user->role) }}
-                    </span>
+                    @if($user->isAdmin())
+                        <span class="badge bg-warning text-dark px-3 py-2">
+                            <i class="bi bi-shield-lock-fill me-1"></i> Admin
+                        </span>
+                    @else
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            <i class="bi bi-mortarboard-fill text-emerald me-1"></i> Student
+                        </span>
+                    @endif
                     <span class="badge {{ $user->isActive() ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }} px-3 py-2">
                         {{ ucfirst($user->status) }}
                     </span>
@@ -48,7 +54,7 @@
                     </div>
                 </div>
 
-                @if(!$user->isOwner() && Auth::id() !== $user->id)
+                @if(Auth::id() !== $user->id)
                     <div class="border-top pt-3 mt-3">
                         <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" onsubmit="return confirm('Permanently delete this user account?');">
                             @csrf
