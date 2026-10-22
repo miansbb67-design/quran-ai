@@ -341,6 +341,12 @@
         var routeAnalyzeWord = $cfg.data('route-analyze-word');
         var routeDeleteSession = $cfg.data('route-delete-session');
 
+        // Ensure HTTPS for Web Speech API & Microphone access on live production domains
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+            return;
+        }
+
         var currentSurah = parseInt($('#selectSurah').val()) || 1;
         var currentAyah = parseInt($('#selectAyah').val()) || 1;
         var sessionId = null;
@@ -406,6 +412,11 @@
 
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRec) {
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    alert('Microphone requires HTTPS connection. Redirecting to secure https://...');
+                    location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+                    return;
+                }
                 alert('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari, or test with the manual Arabic input.');
                 $('#manualInputContainer').removeClass('d-none');
                 return;
@@ -461,6 +472,11 @@
                         console.warn('Speech error:', event.error);
                         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                             $('#speechStatusIndicator').html('<i class="bi bi-slash-circle text-danger me-1"></i> Mic Denied').addClass('bg-danger-subtle text-danger');
+                            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                                alert('Microphone access is blocked because you are on http:// (Not secure). Please open https://xyz.careernexaa.com for microphone permissions.');
+                                location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+                                return;
+                            }
                             alert('Microphone access is not allowed. Please allow microphone permissions in your browser or use the manual Arabic text input.');
                             $('#manualInputContainer').removeClass('d-none');
                             stopRecitationListening(false);
