@@ -47,7 +47,12 @@
                 <a href="{{ route('admin.analytics.index') }}" class="admin-nav-link {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
                     <i class="bi bi-graph-up-arrow text-info"></i>
                     <span>Google & Web Analytics</span>
-                    <span class="badge bg-emerald text-white ms-auto" style="font-size: 0.65rem;">NEW</span>
+                </a>
+
+                <a href="{{ route('admin.seo.index') }}" class="admin-nav-link {{ request()->routeIs('admin.seo.*') ? 'active' : '' }}">
+                    <i class="bi bi-search-heart text-gold"></i>
+                    <span>SEO & Search Console</span>
+                    <span class="badge bg-gold text-dark ms-auto fw-bold" style="font-size: 0.65rem;">SEO</span>
                 </a>
 
                 <div class="admin-nav-heading">Quran & Content Studio</div>
@@ -182,6 +187,11 @@
                         <a href="{{ route('admin.analytics.index') }}" class="admin-nav-link {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
                             <i class="bi bi-graph-up-arrow text-info"></i>
                             <span>Google & Web Analytics</span>
+                        </a>
+                        <a href="{{ route('admin.seo.index') }}" class="admin-nav-link {{ request()->routeIs('admin.seo.*') ? 'active' : '' }}">
+                            <i class="bi bi-search-heart text-gold"></i>
+                            <span>SEO & Search Console</span>
+                            <span class="badge bg-gold text-dark ms-auto fw-bold" style="font-size: 0.65rem;">SEO</span>
                         </a>
 
                         <div class="admin-nav-heading">Quran & Content Studio</div>

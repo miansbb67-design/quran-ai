@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ContentController as AdminContentController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\HadithController as AdminHadithController;
+use App\Http\Controllers\Admin\SeoController as AdminSeoController;
 use App\Http\Controllers\SitemapController;
 
 /*
@@ -141,6 +142,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'admin'])-
         Route::post('/', [AdminSettingsController::class, 'update'])->name('update');
         Route::get('/preview-reciter', [AdminSettingsController::class, 'previewReciter'])->name('preview-reciter');
         Route::post('/clear-cache', [AdminSettingsController::class, 'clearCache'])->name('clear-cache');
+    });
+
+    // SEO & Search Intelligence Suite
+    Route::prefix('seo')->name('seo.')->group(function () {
+        Route::get('/', [AdminSeoController::class, 'index'])->name('index');
+        Route::post('/', [AdminSeoController::class, 'update'])->name('update');
+        Route::post('/robots', [AdminSeoController::class, 'updateRobots'])->name('robots.update');
+        Route::post('/ping-sitemap', [AdminSeoController::class, 'pingSitemap'])->name('ping-sitemap');
     });
 });
 
