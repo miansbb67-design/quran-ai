@@ -43,11 +43,17 @@ class Router
             $requestUri = substr($requestUri, 0, $pos);
         }
 
-        // Handle base path (e.g. /quran-ai/public)
-        $scriptName = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-        $scriptName = str_replace('\\', '/', $scriptName);
-        if ($scriptName !== '/' && str_starts_with($requestUri, $scriptName)) {
-            $requestUri = substr($requestUri, strlen($scriptName));
+        // Handle base path (e.g. /quran-ai/public or /quran-ai)
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+        $scriptDir = str_replace('\\', '/', $scriptDir);
+        
+        // Remove /public if rewritten from parent folder
+        $parentDir = preg_replace('#/public$#', '', $scriptDir);
+
+        if (!empty($scriptDir) && $scriptDir !== '/' && str_starts_with($requestUri, $scriptDir)) {
+            $requestUri = substr($requestUri, strlen($scriptDir));
+        } elseif (!empty($parentDir) && $parentDir !== '/' && str_starts_with($requestUri, $parentDir)) {
+            $requestUri = substr($requestUri, strlen($parentDir));
         }
 
         $requestUri = '/' . trim($requestUri, '/');
