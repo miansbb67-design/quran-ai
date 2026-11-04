@@ -21,6 +21,9 @@ Router::post('/api/quran/bookmark', 'QuranController@toggleBookmark');
 // Tilawat & Recitations
 Router::get('/recitations', 'RecitationController@index');
 
+// XML Dynamic Sitemap for Google / Bing Indexing
+Router::get('/sitemap.xml', 'SitemapController@xml');
+
 // AI Quran Teacher & Recitation Evaluator
 Router::get('/ai-teacher', 'AITeacherController@index');
 Router::post('/api/ai-teacher/evaluate', 'AITeacherController@evaluateRecitation');
@@ -41,3 +44,4 @@ Router::get('/admin/seo', 'AdminSeoController@index');
 Router::post('/admin/seo/update', 'AdminSeoController@update');
 Router::post('/admin/seo/robots', 'AdminSeoController@updateRobots');
 Router::get('/admin/analytics', 'AdminAnalyticsController@index');
+
