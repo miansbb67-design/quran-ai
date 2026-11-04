@@ -18,7 +18,7 @@ ob_start();
                     </div>
                 <?php endif; ?>
 
-                <form method="POST" action="/register">
+                <form method="POST" action="<?= Controller::url('/register') ?>">
                     <?= $csrfField ?>
 
                     <div class="mb-3">
@@ -57,7 +57,7 @@ ob_start();
 
                     <div class="text-center">
                         <span class="text-white-50 small">Already registered?</span>
-                        <a href="/login" class="text-gold small fw-bold text-decoration-none ms-1">Sign In</a>
+                        <a href="<?= Controller::url('/login') ?>" class="text-gold small fw-bold text-decoration-none ms-1">Sign In</a>
                     </div>
                 </form>
             </div>
