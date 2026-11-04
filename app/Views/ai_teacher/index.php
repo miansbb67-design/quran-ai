@@ -193,7 +193,7 @@ function stopRecordingAndAnalyze(recitedText) {
     stopRecordingUI();
     document.getElementById('recordingStatusText').innerText = "Analyzing recitation...";
 
-    fetch('/api/ai-teacher/evaluate', {
+    fetch(`<?= Controller::url('/api/ai-teacher/evaluate') ?>`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `surah_id=${currentAyahData.surahId}&ayah_number=${currentAyahData.ayahNum}&recognized_text=${encodeURIComponent(recitedText)}&target_text=${encodeURIComponent(currentAyahData.text)}&csrf_token=<?= $csrfToken ?>`
@@ -241,7 +241,7 @@ document.getElementById('btnLoadAyah').addEventListener('click', function() {
     const sId = document.getElementById('teacherSurahSelect').value;
     const aNum = document.getElementById('teacherAyahNum').value;
 
-    fetch(`/api/surah/${sId}`)
+    fetch(`<?= Controller::url('/api/surah/') ?>` + sId)
         .then(r => r.json())
         .then(res => {
             const ayah = res.ayahs.find(a => a.number == aNum) || res.ayahs[0];
@@ -264,3 +264,4 @@ document.getElementById('btnLoadAyah').addEventListener('click', function() {
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/main.php';
 ?>
+

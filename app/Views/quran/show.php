@@ -106,7 +106,7 @@ const playIcon = document.getElementById('playIcon');
 const currentAyahInfo = document.getElementById('currentAyahInfo');
 
 // 1. Fetch authentic verses from backend API
-fetch(`/api/surah/${surahId}`)
+fetch(`<?= Controller::url('/api/surah/' . $surah['id']) ?>`)
     .then(r => r.json())
     .then(res => {
         if (!res.success) throw new Error(res.error);
@@ -159,7 +159,7 @@ function attachAyahEvents() {
     document.querySelectorAll('.toggle-bookmark-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const ayah = this.getAttribute('data-ayah');
-            fetch('/api/quran/bookmark', {
+            fetch(`<?= Controller::url('/api/quran/bookmark') ?>`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `surah_id=${surahId}&ayah_number=${ayah}&csrf_token=<?= $csrfToken ?>`
@@ -251,3 +251,4 @@ document.getElementById('btnClosePlayer').addEventListener('click', () => {
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/main.php';
 ?>
+
