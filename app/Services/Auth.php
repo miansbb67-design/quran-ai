@@ -76,8 +76,8 @@ class Auth
     public static function requireAuth(): void
     {
         if (!self::check()) {
-            $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? '/dashboard';
-            header('Location: /login');
+            $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? Controller::url('/dashboard');
+            header('Location: ' . Controller::url('/login'));
             exit;
         }
     }
@@ -94,3 +94,4 @@ class Auth
         }
     }
 }
+
