@@ -1,0 +1,142 @@
+:root {
+    --primary-dark: #031c16;
+    --primary-emerald: #064e3b;
+    --primary-light: #059669;
+    --accent-gold: #d4af37;
+    --accent-gold-light: #f59e0b;
+    --text-light: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-glass: rgba(212, 175, 55, 0.2);
+    --bg-glass: rgba(6, 78, 59, 0.35);
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--primary-dark);
+    color: var(--text-light);
+    overflow-x: hidden;
+}
+
+/* Islamic Typography */
+.arabic-text {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    direction: rtl;
+    line-height: 2.2;
+    font-weight: 500;
+}
+
+.text-gold {
+    color: var(--accent-gold) !important;
+}
+
+.bg-emerald {
+    background-color: var(--primary-emerald) !important;
+}
+
+.border-gold {
+    border-color: var(--border-glass) !important;
+}
+
+/* Luxury Glassmorphism Card */
+.glass-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.15);
+    border-color: rgba(212, 175, 55, 0.4);
+}
+
+/* Buttons */
+.btn-gold {
+    background: linear-gradient(135deg, #d4af37, #b8860b);
+    color: #031c16 !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    background: linear-gradient(135deg, #f59e0b, #d4af37);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+}
+
+.btn-outline-gold {
+    background: transparent;
+    color: var(--accent-gold) !important;
+    border: 1.5px solid var(--accent-gold);
+    border-radius: 10px;
+    padding: 9px 22px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: rgba(212, 175, 55, 0.15);
+    border-color: #f59e0b;
+    color: #fff !important;
+}
+
+/* Navbar */
+.bayan-navbar {
+    background: rgba(3, 28, 22, 0.85);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border-glass);
+    padding: 14px 0;
+}
+
+.nav-link {
+    color: #e2e8f0 !important;
+    font-weight: 500;
+    padding: 8px 16px !important;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--accent-gold) !important;
+}
+
+/* Footer */
+.bayan-footer {
+    background: #02130f;
+    border-top: 1px solid var(--border-glass);
+    padding: 60px 0 30px;
+}
+
+/* Quran Reader Custom Audio Player Bar */
+.sticky-audio-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(3, 28, 22, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-glass);
+    padding: 12px 24px;
+    z-index: 1050;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.5);
+}
+
+/* Ayah Row Highlighting */
+.ayah-box {
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    padding: 24px 0;
+    transition: background-color 0.25s ease;
+}
+
+.ayah-box.playing-now {
+    background-color: rgba(6, 78, 59, 0.45);
+    border-left: 4px solid var(--accent-gold);
+    padding-left: 16px;
+    border-radius: 8px;
+}
