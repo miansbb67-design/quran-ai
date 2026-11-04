@@ -13,7 +13,7 @@
     <!-- Open Graph -->
     <meta property="og:title" content="<?= htmlspecialchars($title ?? 'Bayan AI Quran Teacher') ?>">
     <meta property="og:description" content="<?= htmlspecialchars($seo['meta_description'] ?? 'Master Quran recitation, Tajweed, and Hifz with authentic Qaris.') ?>">
-    <meta property="og:image" content="<?= htmlspecialchars($seo['og_image'] ?? '/assets/images/og-bayan.jpg') ?>">
+    <meta property="og:image" content="<?= Controller::url('/assets/images/og-bayan.jpg') ?>">
     <meta property="og:type" content="website">
 
     <!-- Google Fonts & Bootstrap 5.3 & Icons -->
@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <!-- Custom Theme CSS -->
-    <link rel="stylesheet" href="/assets/css/bayan.css">
+    <link rel="stylesheet" href="<?= Controller::url('/assets/css/bayan.css') ?>">
 
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">
@@ -42,7 +42,7 @@
     <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg bayan-navbar sticky-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="<?= Controller::url('/') ?>">
                 <span class="fs-3 text-gold">📖</span>
                 <div>
                     <span class="fw-bold fs-5 text-white">BAYAN <span class="text-gold">AI</span></span>
@@ -56,24 +56,24 @@
 
             <div class="collapse navbar-collapse" id="bayanNav">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/quran">Read Quran</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/ai-teacher"><i class="bi bi-mic text-gold me-1"></i>AI Teacher</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/recitations">Recitations</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/hifz">Hifz Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= Controller::url('/') ?>">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= Controller::url('/quran') ?>">Read Quran</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= Controller::url('/ai-teacher') ?>"><i class="bi bi-mic text-gold me-1"></i>AI Teacher</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= Controller::url('/recitations') ?>">Recitations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= Controller::url('/hifz') ?>">Hifz Tracker</a></li>
                 </ul>
 
                 <div class="d-flex align-items-center gap-2">
                     <?php if (Auth::check()): ?>
                         <?php if (Auth::isAdmin()): ?>
-                            <a href="/admin" class="btn btn-outline-gold btn-sm"><i class="bi bi-speedometer2 me-1"></i>Admin Panel</a>
+                            <a href="<?= Controller::url('/admin') ?>" class="btn btn-outline-gold btn-sm"><i class="bi bi-speedometer2 me-1"></i>Admin Panel</a>
                         <?php else: ?>
-                            <a href="/dashboard" class="btn btn-outline-gold btn-sm"><i class="bi bi-person-circle me-1"></i>Dashboard</a>
+                            <a href="<?= Controller::url('/dashboard') ?>" class="btn btn-outline-gold btn-sm"><i class="bi bi-person-circle me-1"></i>Dashboard</a>
                         <?php endif; ?>
-                        <a href="/logout" class="btn btn-danger btn-sm px-3">Logout</a>
+                        <a href="<?= Controller::url('/logout') ?>" class="btn btn-danger btn-sm px-3">Logout</a>
                     <?php else: ?>
-                        <a href="/login" class="btn btn-outline-gold btn-sm">Sign In</a>
-                        <a href="/register" class="btn btn-gold btn-sm">Start Free</a>
+                        <a href="<?= Controller::url('/login') ?>" class="btn btn-outline-gold btn-sm">Sign In</a>
+                        <a href="<?= Controller::url('/register') ?>" class="btn btn-gold btn-sm">Start Free</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -102,20 +102,20 @@
                 <div class="col-lg-2 col-6">
                     <h6 class="text-gold fw-bold mb-3">Quran Links</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="/quran" class="text-white-50 text-decoration-none hover-gold">All 114 Surahs</a></li>
-                        <li class="mb-2"><a href="/quran/1" class="text-white-50 text-decoration-none">Surah Al-Fatihah</a></li>
-                        <li class="mb-2"><a href="/quran/36" class="text-white-50 text-decoration-none">Surah Ya-Sin</a></li>
-                        <li class="mb-2"><a href="/quran/55" class="text-white-50 text-decoration-none">Surah Ar-Rahman</a></li>
-                        <li class="mb-2"><a href="/quran/67" class="text-white-50 text-decoration-none">Surah Al-Mulk</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/quran') ?>" class="text-white-50 text-decoration-none">All 114 Surahs</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/quran/1') ?>" class="text-white-50 text-decoration-none">Surah Al-Fatihah</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/quran/36') ?>" class="text-white-50 text-decoration-none">Surah Ya-Sin</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/quran/55') ?>" class="text-white-50 text-decoration-none">Surah Ar-Rahman</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/quran/67') ?>" class="text-white-50 text-decoration-none">Surah Al-Mulk</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-6">
                     <h6 class="text-gold fw-bold mb-3">Learning Modules</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="/ai-teacher" class="text-white-50 text-decoration-none">AI Recitation Coach</a></li>
-                        <li class="mb-2"><a href="/recitations" class="text-white-50 text-decoration-none">Qari Audio Library</a></li>
-                        <li class="mb-2"><a href="/hifz" class="text-white-50 text-decoration-none">Hifz Revision Tracker</a></li>
-                        <li class="mb-2"><a href="/dashboard" class="text-white-50 text-decoration-none">Student Dashboard</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/ai-teacher') ?>" class="text-white-50 text-decoration-none">AI Recitation Coach</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/recitations') ?>" class="text-white-50 text-decoration-none">Qari Audio Library</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/hifz') ?>" class="text-white-50 text-decoration-none">Hifz Revision Tracker</a></li>
+                        <li class="mb-2"><a href="<?= Controller::url('/dashboard') ?>" class="text-white-50 text-decoration-none">Student Dashboard</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3">

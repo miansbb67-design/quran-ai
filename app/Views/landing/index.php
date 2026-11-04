@@ -2,29 +2,29 @@
 ob_start();
 ?>
 
-<!-- Hero Section -->
-<section class="py-5 text-center position-relative" style="background: radial-gradient(circle at 50% 30%, rgba(6, 78, 59, 0.45), transparent 70%);">
+<!-- Hero Section with GSAP Animation Classes -->
+<section class="py-5 text-center position-relative hero-section" style="background: radial-gradient(circle at 50% 30%, rgba(6, 78, 59, 0.45), transparent 70%);">
     <div class="container py-lg-5">
-        <div class="badge px-3 py-2 rounded-pill mb-3" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: #d4af37;">
+        <div class="badge px-3 py-2 rounded-pill mb-3 hero-anim" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: #d4af37;">
             <i class="bi bi-stars me-1"></i> The Modern Islamic Quran Learning Experience
         </div>
         
-        <h1 class="display-3 fw-bold mb-3">
+        <h1 class="display-3 fw-bold mb-3 hero-anim">
             Learn the Quran with <span class="text-gold">Confidence</span>
         </h1>
         
-        <p class="lead text-white-50 mx-auto mb-4" style="max-width: 720px;">
+        <p class="lead text-white-50 mx-auto mb-4 hero-anim" style="max-width: 720px;">
             Read authentic Uthmani Quran, listen to world-renowned Qaris, test your recitation with real-time AI speech feedback, and organize your daily Hifz memorization.
         </p>
 
-        <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
-            <a href="/register" class="btn btn-gold btn-lg px-4"><i class="bi bi-person-plus-fill me-2"></i>Start Learning Free</a>
-            <a href="/recitations" class="btn btn-outline-gold btn-lg px-4"><i class="bi bi-play-circle me-2"></i>Listen to Quran</a>
-            <a href="/ai-teacher" class="btn btn-emerald btn-lg px-4 text-white" style="background: #059669; border: 1px solid #10b981;"><i class="bi bi-mic-fill me-2 text-warning"></i>Try AI Recitation</a>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-5 hero-anim">
+            <a href="<?= Controller::url('/register') ?>" class="btn btn-gold btn-lg px-4"><i class="bi bi-person-plus-fill me-2"></i>Start Learning Free</a>
+            <a href="<?= Controller::url('/recitations') ?>" class="btn btn-outline-gold btn-lg px-4"><i class="bi bi-play-circle me-2"></i>Listen to Quran</a>
+            <a href="<?= Controller::url('/ai-teacher') ?>" class="btn btn-emerald btn-lg px-4 text-white" style="background: #059669; border: 1px solid #10b981;"><i class="bi bi-mic-fill me-2 text-warning"></i>Try AI Recitation</a>
         </div>
 
         <!-- Arabic Bismillah Calligraphy -->
-        <div class="my-4">
+        <div class="my-4 hero-anim">
             <p class="arabic-text fs-2 text-gold opacity-75">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
         </div>
     </div>
@@ -47,7 +47,7 @@ ob_start();
                     <p class="text-white-50 small mb-3">
                         All 114 Surahs and 30 Juz with authentic Uthmani script, translations, and verse-by-verse audio sync.
                     </p>
-                    <a href="/quran" class="text-gold small fw-bold text-decoration-none">Read Now <i class="bi bi-arrow-right"></i></a>
+                    <a href="<?= Controller::url('/quran') ?>" class="text-gold small fw-bold text-decoration-none">Read Now <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
 
@@ -59,7 +59,7 @@ ob_start();
                     <p class="text-white-50 small mb-3">
                         Recite through your microphone and get instant word-by-word difference detection and pronunciation suggestions.
                     </p>
-                    <a href="/ai-teacher" class="text-gold small fw-bold text-decoration-none">Practice Recitation <i class="bi bi-arrow-right"></i></a>
+                    <a href="<?= Controller::url('/ai-teacher') ?>" class="text-gold small fw-bold text-decoration-none">Practice Recitation <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@ ob_start();
                     <p class="text-white-50 small mb-3">
                         Listen to Sheikh Mishary Alafasy, AbdulBaset, Al-Husary, and Sudais in crystal-clear audio quality.
                     </p>
-                    <a href="/recitations" class="text-gold small fw-bold text-decoration-none">Browse Qaris <i class="bi bi-arrow-right"></i></a>
+                    <a href="<?= Controller::url('/recitations') ?>" class="text-gold small fw-bold text-decoration-none">Browse Qaris <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
 
@@ -83,7 +83,7 @@ ob_start();
                     <p class="text-white-50 small mb-3">
                         Set memorization targets, track revision cycles, and maintain learning streaks without losing progress.
                     </p>
-                    <a href="/hifz" class="text-gold small fw-bold text-decoration-none">Track Memorization <i class="bi bi-arrow-right"></i></a>
+                    <a href="<?= Controller::url('/hifz') ?>" class="text-gold small fw-bold text-decoration-none">Track Memorization <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </div>
@@ -98,7 +98,7 @@ ob_start();
                 <h6 class="text-gold text-uppercase fw-bold">Authentic Voices</h6>
                 <h2 class="fw-bold mb-0">Featured Qaris</h2>
             </div>
-            <a href="/recitations" class="btn btn-outline-gold btn-sm">View All Qaris</a>
+            <a href="<?= Controller::url('/recitations') ?>" class="btn btn-outline-gold btn-sm">View All Qaris</a>
         </div>
 
         <div class="row g-4">
@@ -131,7 +131,7 @@ ob_start();
         <div class="row g-3">
             <?php foreach ($popularSurahs as $s): ?>
                 <div class="col-sm-6 col-md-3">
-                    <a href="/quran/<?= $s['id'] ?>" class="glass-card p-3 d-flex justify-content-between align-items-center text-decoration-none">
+                    <a href="<?= Controller::url('/quran/' . $s['id']) ?>" class="glass-card p-3 d-flex justify-content-between align-items-center text-decoration-none">
                         <div>
                             <span class="badge bg-emerald border border-gold text-gold me-2">#<?= $s['id'] ?></span>
                             <span class="fw-bold text-white"><?= htmlspecialchars($s['name_english']) ?></span>
@@ -145,21 +145,60 @@ ob_start();
     </div>
 </section>
 
-<!-- Ethical AI Quran Learning & Tajweed Disclosure -->
-<section class="py-5">
+<!-- How It Works Section -->
+<section class="py-5" style="background: rgba(6, 78, 59, 0.15);">
     <div class="container">
-        <div class="glass-card p-4 p-lg-5 border-gold">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-8">
-                    <span class="badge bg-warning text-dark fw-bold mb-2"><i class="bi bi-shield-lock-fill me-1"></i> Religious & Academic Integrity</span>
-                    <h3 class="fw-bold text-white mb-3">Honest & Responsible AI Assistance</h3>
-                    <p class="text-white-50 mb-0">
-                        Our speech analysis compares your recitation against canonical Uthmani text to highlight omissions, word substitutions, and pacing. While it provides an invaluable daily practice coach, verified Tajweed certification requires instruction under a qualified human Quran teacher.
-                    </p>
+        <div class="text-center mb-5">
+            <h6 class="text-gold text-uppercase fw-bold">Step-by-Step Learning</h6>
+            <h2 class="fw-bold">How Bayan AI Works</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center h-100">
+                    <div class="badge rounded-circle bg-dark border border-gold text-gold fs-4 mb-3" style="width: 50px; height: 50px; line-height: 38px;">1</div>
+                    <h5 class="fw-bold text-white mb-2">Select Surah & Ayah</h5>
+                    <p class="text-white-50 small mb-0">Browse all 114 Surahs and listen to authentic Murattal recitations by renowned Qaris.</p>
                 </div>
-                <div class="col-lg-4 text-lg-end">
-                    <a href="/ai-teacher" class="btn btn-gold btn-lg px-4"><i class="bi bi-mic me-1"></i> Test Microphone</a>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center h-100 border-gold">
+                    <div class="badge rounded-circle bg-emerald border border-gold text-gold fs-4 mb-3" style="width: 50px; height: 50px; line-height: 38px;">2</div>
+                    <h5 class="fw-bold text-white mb-2">Recite via Microphone</h5>
+                    <p class="text-white-50 small mb-0">Use your device microphone to recite the verse in real time with immediate Arabic speech capture.</p>
                 </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center h-100">
+                    <div class="badge rounded-circle bg-dark border border-gold text-gold fs-4 mb-3" style="width: 50px; height: 50px; line-height: 38px;">3</div>
+                    <h5 class="fw-bold text-white mb-2">Instant Feedback & Hifz</h5>
+                    <p class="text-white-50 small mb-0">Receive word-by-word pronunciation difference detection and track your revision streak.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5">
+    <div class="container" style="max-width: 800px;">
+        <div class="text-center mb-5">
+            <h6 class="text-gold text-uppercase fw-bold">Common Questions</h6>
+            <h2 class="fw-bold">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="accordion accordion-flush" id="bayanFaq">
+            <div class="glass-card mb-3 p-3">
+                <h6 class="fw-bold text-white mb-2"><i class="bi bi-question-circle text-gold me-2"></i>Is the Quranic text authentic?</h6>
+                <p class="text-white-50 small mb-0">Yes. We strictly use the canonical Uthmani Arabic script verified against canonical Quranic standards. We never generate or fabricate Arabic verses.</p>
+            </div>
+            <div class="glass-card mb-3 p-3">
+                <h6 class="fw-bold text-white mb-2"><i class="bi bi-question-circle text-gold me-2"></i>Can the AI replace a certified Tajweed teacher?</h6>
+                <p class="text-white-50 small mb-0">No. Our AI speech analyzer is an educational practice aid that detects word omissions, substitutions, and accuracy. Certified Tajweed verification requires human assessment.</p>
+            </div>
+            <div class="glass-card mb-3 p-3">
+                <h6 class="fw-bold text-white mb-2"><i class="bi bi-question-circle text-gold me-2"></i>Is Bayan AI free to use?</h6>
+                <p class="text-white-50 small mb-0">Yes. Students can read the full Quran, listen to all Qari recitations, practice with the AI teacher, and track their Hifz progress 100% free.</p>
             </div>
         </div>
     </div>
@@ -172,9 +211,24 @@ ob_start();
         <p class="text-white-50 mb-4 mx-auto" style="max-width: 600px;">
             Create your free student account, set your daily reading goals, and experience intelligent Quran recitation practice.
         </p>
-        <a href="/register" class="btn btn-gold btn-lg px-5">Join Bayan AI Now</a>
+        <a href="<?= Controller::url('/register') ?>" class="btn btn-gold btn-lg px-5">Join Bayan AI Now</a>
     </div>
 </section>
+
+<script>
+// Subtle GSAP animations on load
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof gsap !== 'undefined') {
+        gsap.from(".hero-anim", {
+            opacity: 0,
+            y: 30,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out"
+        });
+    }
+});
+</script>
 
 <?php
 $content = ob_get_clean();

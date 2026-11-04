@@ -5,12 +5,38 @@ require_once __DIR__ . '/../Services/Auth.php';
 
 abstract class Controller
 {
+    public static function basePath(): string
+    {
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+        $scriptDir = str_replace('\\', '/', $scriptDir);
+        $parentDir = preg_replace('#/public$#', '', $scriptDir);
+        
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+        if (str_starts_with($requestUri, $scriptDir) && $scriptDir !== '/') {
+            return $scriptDir;
+        } elseif (str_starts_with($requestUri, $parentDir) && $parentDir !== '/') {
+            return $parentDir;
+        }
+        return '';
+    }
+
+    public static function url(string $path = '/'): string
+    {
+        $base = self::basePath();
+        $path = '/' . ltrim($path, '/');
+        if ($path === '/' && !empty($base)) {
+            return $base;
+        }
+        return rtrim($base, '/') . $path;
+    }
+
     protected function view(string $viewPath, array $data = []): void
     {
         extract($data);
         $user = Auth::user();
         $csrfToken = Security::generateCsrf();
         $csrfField = Security::csrfField();
+        $baseUrl = self::basePath();
 
         $viewFile = __DIR__ . "/../Views/{$viewPath}.php";
         if (!file_exists($viewFile)) {
@@ -30,7 +56,8 @@ abstract class Controller
 
     protected function redirect(string $url): void
     {
-        header("Location: {$url}");
+        $target = self::url($url);
+        header("Location: {$target}");
         exit;
     }
 
