@@ -160,3 +160,4 @@ document.querySelectorAll('.mark-memorized-btn').forEach(btn => {
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/main.php';
 ?>
+

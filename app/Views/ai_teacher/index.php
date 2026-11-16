@@ -2,119 +2,131 @@
 ob_start();
 ?>
 
-<div class="container py-4 pb-5">
-    <div class="text-center mb-5">
-        <div class="badge px-3 py-2 rounded-pill mb-2" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: #d4af37;">
-            <i class="bi bi-mic me-1"></i> Interactive Quranic Pronunciation Coach
+<!-- Life Deen Subpage Header -->
+<div class="container" style="padding-top:2rem; padding-bottom:1rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid var(--border); padding-bottom:1.5rem; margin-bottom:2rem;">
+    <div>
+      <span class="badge badge-gold" style="margin-bottom:0.5rem; display:inline-block;"><i class="bi bi-mic me-1"></i> Interactive Voice AI</span>
+      <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">AI Quran Recitation Teacher</h1>
+      <p style="font-size:0.95rem; color:var(--text-muted); margin:0.35rem 0 0;">Practice Quran recitation into your microphone with instant word-by-word alignment and feedback.</p>
+    </div>
+    <div>
+      <a href="<?= Controller::url('/quran') ?>" class="btn btn-sm btn-outline"><i class="bi bi-book me-1"></i> Open Full Quran</a>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:4rem;">
+  <div style="display:grid; grid-template-columns: 2fr 1fr; gap:2rem; align-items:start;">
+    
+    <!-- Left: Recitation Workspace -->
+    <div>
+      <div class="tool-card" style="padding:2rem; margin-bottom:2rem;">
+        <!-- Surah & Ayah Pickers -->
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem; margin-bottom:2rem;">
+          <div>
+            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Choose Surah</label>
+            <select id="teacherSurahSelect" class="form-control" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+              <?php foreach ($surahs as $s): ?>
+                <option value="<?= $s['id'] ?>">Surah <?= $s['id'] ?>: <?= htmlspecialchars($s['name_english']) ?> (<?= $s['name_arabic'] ?>)</option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Ayah</label>
+            <input type="number" id="teacherAyahNum" value="1" min="1" max="7" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button id="btnLoadAyah" class="btn btn-primary" style="width:100%; padding:0.65rem;">Load Ayah</button>
+          </div>
         </div>
-        <h1 class="fw-bold text-white mb-2">AI Quran Recitation Teacher</h1>
-        <p class="text-white-50 mx-auto" style="max-width: 650px;">
-            Select an ayah, listen to an authentic reference Qari, and recite via microphone to receive immediate word-by-word difference detection.
+
+        <!-- Verse Display Card -->
+        <div style="background:var(--bg-alt); border-radius:12px; padding:2rem; text-align:center; margin-bottom:2rem; border:1px solid var(--gold-border);">
+          <span id="displayAyahTitle" style="display:block; font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:1px;">Surah Al-Fatihah — Ayah 1</span>
+          <h2 id="displayArabicText" class="arabic-text" style="font-size:2.4rem; line-height:2; color:var(--primary-dark); margin:0 0 1rem; font-weight:bold;">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</h2>
+          <p id="displayTranslation" style="font-size:1rem; color:var(--text-muted); margin:0 0 1.25rem;">In the name of Allah, the Entirely Merciful, the Especially Merciful.</p>
+          
+          <button id="btnPlayReference" class="btn btn-sm btn-outline" style="background:#fff;">
+            <i class="bi bi-volume-up me-1"></i> Listen to Reference Qari (Mishary Alafasy)
+          </button>
+          <audio id="refAudio" preload="none"></audio>
+        </div>
+
+        <!-- Microphone Recording Center -->
+        <div style="text-align:center; padding:1.5rem 0;">
+          <button id="btnRecordToggle" style="width:84px; height:84px; border-radius:50%; background:var(--gold-gradient); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(212,175,55,0.4); display:inline-flex; align-items:center; justify-content:center; transition:transform 0.2s ease;">
+            <i class="bi bi-mic-fill" id="micIcon" style="font-size:2rem; color:#000;"></i>
+          </button>
+          <h3 id="recordingStatusText" style="font-size:1.15rem; font-weight:700; margin:1rem 0 0.25rem; color:var(--text-main);">Tap Microphone to Recite</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Allow microphone permission when prompted by your browser.</p>
+        </div>
+
+        <!-- Speech Transcript -->
+        <div style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1.5rem;">
+          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.35rem;">Detected Speech (Arabic):</span>
+          <p id="speechTranscriptText" class="arabic-text" style="font-size:1.3rem; color:var(--primary); margin:0;">Waiting for microphone input...</p>
+        </div>
+      </div>
+
+      <!-- AI Word-by-Word Feedback Card -->
+      <div id="feedbackCard" class="tool-card" style="padding:2rem; display:none; border:2px solid var(--primary);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3 style="font-size:1.2rem; margin:0; color:var(--primary); font-weight:700;">
+            <i class="bi bi-check-circle-fill me-1"></i> Recitation Accuracy Report
+          </h3>
+          <span id="accuracyBadge" class="badge badge-gold" style="font-size:0.9rem; padding:0.35rem 0.85rem;">Accuracy: 0%</span>
+        </div>
+
+        <div style="background:var(--bg-alt); padding:1.25rem; border-radius:8px; margin-bottom:1rem;">
+          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.75rem;">Word Alignment:</span>
+          <div id="wordByWordContainer" class="arabic-text" style="display:flex; flex-wrap:wrap; gap:0.5rem; font-size:1.4rem;"></div>
+        </div>
+
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">
+          <strong>Educational Safeguard:</strong> This speech analysis is an educational aid. Certified Tajweed rules require guidance from a human Quran teacher.
         </p>
+      </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Practice Workspace Column -->
-        <div class="col-lg-8">
-            <div class="glass-card p-4 border-gold mb-4">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label text-white-50 small">Select Surah</label>
-                        <select id="teacherSurahSelect" class="form-select bg-dark text-white border-secondary">
-                            <?php foreach ($surahs as $s): ?>
-                                <option value="<?= $s['id'] ?>">Surah <?= $s['id'] ?>: <?= htmlspecialchars($s['name_english']) ?> (<?= $s['name_arabic'] ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-white-50 small">Ayah Number</label>
-                        <input type="number" id="teacherAyahNum" class="form-control bg-dark text-white border-secondary" value="1" min="1" max="7">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button id="btnLoadAyah" class="btn btn-outline-gold w-100"><i class="bi bi-arrow-repeat me-1"></i> Load Ayah</button>
-                    </div>
+    <!-- Right: Sidebar Info & Tips -->
+    <div>
+      <!-- Recent History Card -->
+      <div class="tool-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+        <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-main); margin:0 0 1rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
+          <i class="bi bi-clock-history me-1" style="color:var(--gold);"></i> Recent Practices
+        </h4>
+        <?php if (empty($recentSessions)): ?>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">No practice sessions recorded yet. Start reciting to see your log!</p>
+        <?php else: ?>
+          <ul style="list-style:none; padding:0; margin:0;">
+            <?php foreach ($recentSessions as $session): ?>
+              <li style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--border);">
+                <div>
+                  <strong style="font-size:0.85rem; display:block; color:var(--text-main);"><?= htmlspecialchars($session['name_english']) ?> (Ayah <?= $session['ayah_number'] ?>)</strong>
+                  <span style="font-size:0.75rem; color:var(--text-muted);"><?= date('M d, H:i', strtotime($session['created_at'])) ?></span>
                 </div>
+                <span class="badge badge-primary"><?= round($session['accuracy_score']) ?>%</span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endif; ?>
+      </div>
 
-                <!-- Ayah Display Box -->
-                <div class="p-4 rounded-3 text-center mb-4" style="background: rgba(3, 28, 22, 0.7); border: 1px solid var(--border-glass);">
-                    <small class="text-gold fw-bold text-uppercase d-block mb-2" id="displayAyahTitle">Surah Al-Fatihah — Ayah 1</small>
-                    <h2 class="arabic-text text-white display-5 mb-3" id="displayArabicText">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</h2>
-                    <p class="text-white-50 mb-3" id="displayTranslation">In the name of Allah, the Entirely Merciful, the Especially Merciful.</p>
-                    
-                    <button id="btnPlayReference" class="btn btn-outline-gold btn-sm"><i class="bi bi-volume-up me-1"></i> Listen to Reference Qari</button>
-                    <audio id="refAudio" preload="none"></audio>
-                </div>
-
-                <!-- Recitation Microphone & Recording Section -->
-                <div class="text-center py-3">
-                    <div class="mb-3">
-                        <button id="btnRecordToggle" class="btn btn-gold btn-lg rounded-circle p-4 shadow-lg position-relative" style="width: 90px; height: 90px;">
-                            <i class="bi bi-mic-fill fs-1" id="micIcon"></i>
-                        </button>
-                    </div>
-                    <h5 class="fw-bold text-white mb-1" id="recordingStatusText">Tap to Recite Ayah</h5>
-                    <p class="text-white-50 small mb-0">Allow microphone permission in your browser when prompted.</p>
-                </div>
-
-                <!-- Live Speech Transcript Box -->
-                <div class="mt-4 p-3 rounded bg-dark border border-secondary">
-                    <label class="form-label text-white-50 small mb-1">Your Recitation (Recognized Speech):</label>
-                    <p class="arabic-text text-warning fs-4 mb-0" id="speechTranscriptText">Waiting for microphone recitation...</p>
-                </div>
-            </div>
-
-            <!-- AI Word-by-Word Feedback Card -->
-            <div class="glass-card p-4 border-gold d-none" id="feedbackCard">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-white mb-0"><i class="bi bi-patch-check-fill text-gold me-2"></i>Recitation Analysis</h5>
-                    <span class="badge fs-6 px-3 py-2" id="accuracyBadge">Accuracy: 0%</span>
-                </div>
-
-                <div class="p-3 rounded bg-dark mb-3">
-                    <label class="text-white-50 small mb-2">Word-by-word Alignment:</label>
-                    <div id="wordByWordContainer" class="d-flex flex-wrap gap-2 direction-rtl" style="direction: rtl;"></div>
-                </div>
-
-                <div class="alert alert-info py-2 small mb-0">
-                    <i class="bi bi-info-circle me-1"></i> <strong>Academic & Tajweed Notice:</strong> This speech analysis is an educational recitation aid. Tajweed rules (Ghunnah, Qalqalah, Ikhfa) require qualified human verification.
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar / Recent Practice Column -->
-        <div class="col-lg-4">
-            <div class="glass-card p-4 border-gold mb-4">
-                <h6 class="text-gold fw-bold text-uppercase mb-3"><i class="bi bi-clock-history me-1"></i> Recent Practices</h6>
-                <?php if (empty($recentSessions)): ?>
-                    <p class="text-white-50 small mb-0">No recorded practice sessions yet. Start reciting to see your history!</p>
-                <?php else: ?>
-                    <ul class="list-unstyled mb-0">
-                        <?php foreach ($recentSessions as $session): ?>
-                            <li class="pb-3 mb-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-white mb-0"><?= htmlspecialchars($session['name_english']) ?> (Ayah <?= $session['ayah_number'] ?>)</h6>
-                                    <small class="text-white-50"><?= date('M d, H:i', strtotime($session['created_at'])) ?></small>
-                                </div>
-                                <span class="badge <?= ($session['status'] === 'passed') ? 'bg-success' : 'bg-warning text-dark' ?>">
-                                    <?= round($session['accuracy_score']) ?>%
-                                </span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </div>
-
-            <div class="glass-card p-4">
-                <h6 class="text-gold fw-bold text-uppercase mb-3"><i class="bi bi-lightbulb me-1"></i> Recitation Tips</h6>
-                <ul class="text-white-50 small ps-3 mb-0">
-                    <li class="mb-2">Recite in a quiet room with minimal background noise.</li>
-                    <li class="mb-2">Listen to the reference Qari recitation first to align pacing.</li>
-                    <li class="mb-2">Pronounce letters clearly from their correct exit points (Makharij).</li>
-                    <li>Repeat difficult ayahs until your match score reaches 90%+.</li>
-                </ul>
-            </div>
-        </div>
+      <!-- Recitation Advice -->
+      <div class="tool-card" style="padding:1.5rem;">
+        <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-main); margin:0 0 1rem;">
+          <i class="bi bi-lightbulb me-1" style="color:var(--gold);"></i> Practice Guidelines
+        </h4>
+        <ul style="padding-left:1.2rem; font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin:0;">
+          <li>Listen to the reference Qari first to align with the correct pace.</li>
+          <li>Recite in a quiet room for optimal speech recognition.</li>
+          <li>Focus on clear articulation from the Arabic Makharij (exit points).</li>
+        </ul>
+      </div>
     </div>
+
+  </div>
 </div>
 
 <script>
@@ -127,11 +139,10 @@ let currentAyahData = {
     audioNum: "001001.mp3"
 };
 
-// Check Web Speech API support
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA'; // Arabic recitation recognition
+    recognition.lang = 'ar-SA';
     recognition.continuous = false;
     recognition.interimResults = true;
 
@@ -148,8 +159,7 @@ if (SpeechRecognition) {
     };
 
     recognition.onerror = function(event) {
-        console.error("Speech Recognition Error:", event.error);
-        document.getElementById('recordingStatusText').innerText = "Microphone error: " + event.error;
+        document.getElementById('recordingStatusText').innerText = "Microphone Notice: " + event.error;
         stopRecordingUI();
     };
 
@@ -157,13 +167,13 @@ if (SpeechRecognition) {
         stopRecordingUI();
     };
 } else {
-    document.getElementById('speechTranscriptText').innerText = "Web Speech API is not supported in this browser. Please use Google Chrome or Microsoft Edge.";
+    document.getElementById('speechTranscriptText').innerText = "Web Speech API is supported on Google Chrome and Microsoft Edge.";
 }
 
 const btnRecord = document.getElementById('btnRecordToggle');
 btnRecord.addEventListener('click', function() {
     if (!recognition) {
-        alert("Microphone speech recognition requires Google Chrome or Microsoft Edge.");
+        alert("Please use Google Chrome or Microsoft Edge for microphone speech recitation.");
         return;
     }
 
@@ -172,7 +182,7 @@ btnRecord.addEventListener('click', function() {
             recognition.start();
             isRecording = true;
             document.getElementById('recordingStatusText').innerText = "Listening... Recite the Ayah now!";
-            document.getElementById('micIcon').className = 'bi bi-stop-circle-fill fs-1 text-danger';
+            document.getElementById('micIcon').className = 'bi bi-stop-circle-fill text-danger';
             document.getElementById('speechTranscriptText').innerText = "Listening...";
         } catch(e) {
             console.error(e);
@@ -185,8 +195,8 @@ btnRecord.addEventListener('click', function() {
 
 function stopRecordingUI() {
     isRecording = false;
-    document.getElementById('recordingStatusText').innerText = "Tap to Recite Ayah";
-    document.getElementById('micIcon').className = 'bi bi-mic-fill fs-1';
+    document.getElementById('recordingStatusText').innerText = "Tap Microphone to Recite";
+    document.getElementById('micIcon').className = 'bi bi-mic-fill';
 }
 
 function stopRecordingAndAnalyze(recitedText) {
@@ -206,18 +216,17 @@ function stopRecordingAndAnalyze(recitedText) {
         }
 
         const feedbackCard = document.getElementById('feedbackCard');
-        feedbackCard.classList.remove('d-none');
+        feedbackCard.style.display = 'block';
 
         const badge = document.getElementById('accuracyBadge');
         badge.innerText = `Accuracy: ${res.accuracy}%`;
-        badge.className = `badge fs-6 px-3 py-2 ${res.accuracy >= 80 ? 'bg-success' : 'bg-warning text-dark'}`;
 
         let wordsHtml = '';
         res.word_diffs.forEach(w => {
             if (w.status === 'correct') {
-                wordsHtml += `<span class="badge bg-success-subtle text-success border border-success fs-5 p-2">${w.word}</span>`;
+                wordsHtml += `<span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:0.2rem 0.6rem; border-radius:6px; margin:2px;">${w.word}</span>`;
             } else {
-                wordsHtml += `<span class="badge bg-danger-subtle text-danger border border-danger fs-5 p-2" title="Check pronunciation">${w.word}</span>`;
+                wordsHtml += `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:0.2rem 0.6rem; border-radius:6px; margin:2px;" title="Check pronunciation">${w.word}</span>`;
             }
         });
         document.getElementById('wordByWordContainer').innerHTML = wordsHtml;
@@ -254,8 +263,8 @@ document.getElementById('btnLoadAyah').addEventListener('click', function() {
             document.getElementById('displayAyahTitle').innerText = `Surah ${sId} — Ayah ${ayah.number}`;
             document.getElementById('displayArabicText').innerText = ayah.text;
             document.getElementById('displayTranslation').innerText = ayah.translation;
-            document.getElementById('feedbackCard').classList.add('d-none');
-            document.getElementById('speechTranscriptText').innerText = "Waiting for microphone recitation...";
+            document.getElementById('feedbackCard').style.display = 'none';
+            document.getElementById('speechTranscriptText').innerText = "Waiting for microphone input...";
         });
 });
 </script>
@@ -264,4 +273,3 @@ document.getElementById('btnLoadAyah').addEventListener('click', function() {
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/main.php';
 ?>
-

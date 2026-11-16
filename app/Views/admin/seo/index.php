@@ -129,3 +129,4 @@ document.querySelectorAll('.edit-seo-btn').forEach(btn => {
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/admin.php';
 ?>
+
