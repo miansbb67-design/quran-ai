@@ -6,11 +6,13 @@ ob_start();
 <div class="container" style="padding-top:2rem; padding-bottom:1rem;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid var(--border); padding-bottom:1.5rem; margin-bottom:2rem;">
     <div>
-      <span class="badge badge-gold" style="margin-bottom:0.5rem; display:inline-block;"><i class="bi bi-mic me-1"></i> Interactive Voice AI</span>
-      <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">AI Quran Recitation Teacher</h1>
-      <p style="font-size:0.95rem; color:var(--text-muted); margin:0.35rem 0 0;">Recite into your microphone and get instant word-by-word correct/incorrect feedback.</p>
+      <span class="badge badge-gold" style="margin-bottom:0.5rem; display:inline-flex; align-items:center; gap:0.4rem;">
+        <i class="bi bi-cpu-fill" style="color:var(--gold);"></i> Advanced Gemini AI Recitation Coach
+      </span>
+      <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">AI Quran Recitation Teacher & Tajweed Hub</h1>
+      <p style="font-size:0.95rem; color:var(--text-muted); margin:0.35rem 0 0;">Practice live recitation with instant word-by-word matching, waveform visualization, and Google Gemini AI Tajweed guidance.</p>
     </div>
-    <div>
+    <div style="display:flex; gap:0.75rem;">
       <a href="<?= Controller::url('/quran') ?>" class="btn btn-sm btn-outline"><i class="bi bi-book me-1"></i> Open Full Quran</a>
     </div>
   </div>
@@ -21,64 +23,80 @@ ob_start();
     
     <!-- Left: Recitation Workspace -->
     <div>
-      <div class="tool-card" style="padding:2rem; margin-bottom:2rem;">
-        <!-- Surah & Ayah Pickers -->
-        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem; margin-bottom:2rem;">
+      <div class="tool-card" style="padding:2rem; margin-bottom:2rem; box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+        <!-- Surah, Ayah & Qari Controls -->
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
           <div>
-            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Choose Surah</label>
-            <select id="teacherSurahSelect" class="form-control" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+            <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.4rem; color:var(--text-main);">Choose Surah</label>
+            <select id="teacherSurahSelect" class="form-control" style="width:100%; padding:0.65rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
               <?php foreach ($surahs as $s): ?>
                 <option value="<?= $s['id'] ?>">Surah <?= $s['id'] ?>: <?= htmlspecialchars($s['name_english']) ?> (<?= $s['name_arabic'] ?>)</option>
               <?php endforeach; ?>
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Ayah</label>
-            <input type="number" id="teacherAyahNum" value="1" min="1" max="7" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+            <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.4rem; color:var(--text-main);">Ayah</label>
+            <input type="number" id="teacherAyahNum" value="1" min="1" max="7" style="width:100%; padding:0.65rem; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
           </div>
           <div style="display:flex; align-items:flex-end;">
-            <button id="btnLoadAyah" class="btn btn-primary" style="width:100%; padding:0.65rem;">Load Ayah</button>
+            <button id="btnLoadAyah" class="btn btn-primary" style="width:100%; padding:0.65rem; font-weight:700;">Load Ayah</button>
           </div>
         </div>
 
         <!-- Verse Display Card -->
-        <div style="background:var(--bg-alt); border-radius:12px; padding:2rem; text-align:center; margin-bottom:2rem; border:1px solid var(--gold-border);">
-          <span id="displayAyahTitle" style="display:block; font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:1px;">Surah Al-Fatihah — Ayah 1</span>
-          <h2 id="displayArabicText" class="arabic-text" style="font-size:2.4rem; line-height:2; color:var(--primary-dark); margin:0 0 1rem; font-weight:bold;">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</h2>
-          <p id="displayTranslation" style="font-size:1rem; color:var(--text-muted); margin:0 0 1.25rem;">In the name of Allah, the Entirely Merciful, the Especially Merciful.</p>
+        <div style="background:var(--bg-alt); border-radius:16px; padding:2rem; text-align:center; margin-bottom:2rem; border:1px solid var(--gold-border); position:relative;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <span id="displayAyahTitle" style="font-size:0.85rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">Surah Al-Fatihah — Ayah 1</span>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Qari:</span>
+              <select id="refQariSelect" style="padding:0.25rem 0.6rem; border:1px solid var(--border); border-radius:6px; font-size:0.8rem;">
+                <?php foreach ($qaris as $q): ?>
+                  <option value="<?= htmlspecialchars($q['server_url']) ?>"><?= htmlspecialchars($q['name_english']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+
+          <h2 id="displayArabicText" class="arabic-text" style="font-size:2.6rem; line-height:2.2; color:var(--primary-dark); margin:0 0 1rem; font-weight:bold;">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</h2>
+          <p id="displayTranslation" style="font-size:1.05rem; color:var(--text-muted); margin:0 0 1.5rem;">In the name of Allah, the Entirely Merciful, the Especially Merciful.</p>
           
-          <button id="btnPlayReference" class="btn btn-sm btn-outline" style="background:#fff;">
-            <i class="bi bi-volume-up me-1"></i> Listen to Reference Qari (Mishary Alafasy)
+          <button id="btnPlayReference" class="btn btn-sm btn-outline" style="background:#fff; border-color:var(--gold-border); color:var(--text-main); font-weight:600;">
+            <i class="bi bi-play-circle-fill" style="color:var(--primary);"></i> Listen to Reference Tilawat
           </button>
           <audio id="refAudio" preload="none"></audio>
         </div>
 
-        <!-- Microphone Recording Center -->
+        <!-- Advanced Microphone Recording Center with Pulse Animation -->
         <div style="text-align:center; padding:1.5rem 0;">
-          <button id="btnRecordToggle" style="width:84px; height:84px; border-radius:50%; background:var(--gold-gradient); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(212,175,55,0.4); display:inline-flex; align-items:center; justify-content:center; transition:transform 0.2s ease;">
-            <i class="bi bi-mic-fill" id="micIcon" style="font-size:2rem; color:#000;"></i>
-          </button>
-          <h3 id="recordingStatusText" style="font-size:1.15rem; font-weight:700; margin:1rem 0 0.25rem; color:var(--text-main);">Tap Microphone to Recite</h3>
+          <div style="position:relative; display:inline-block;">
+            <button id="btnRecordToggle" style="width:90px; height:90px; border-radius:50%; background:var(--gold-gradient); border:none; cursor:pointer; box-shadow:0 8px 30px rgba(212,175,55,0.45); display:inline-flex; align-items:center; justify-content:center; transition:transform 0.2s ease;">
+              <i class="bi bi-mic-fill" id="micIcon" style="font-size:2.2rem; color:#000;"></i>
+            </button>
+          </div>
+          <h3 id="recordingStatusText" style="font-size:1.2rem; font-weight:800; margin:1rem 0 0.25rem; color:var(--text-main);">Tap Microphone to Start Recitation</h3>
           <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Recite clearly into your microphone in Arabic.</p>
         </div>
 
-        <!-- Speech Transcript -->
-        <div style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1.5rem;">
-          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.35rem;">Detected Speech (Arabic):</span>
-          <p id="speechTranscriptText" class="arabic-text" style="font-size:1.3rem; color:var(--primary); margin:0;">Waiting for microphone input...</p>
+        <!-- Live Detected Speech Transcript -->
+        <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-top:1.5rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Live Speech Recognition (Arabic):</span>
+            <span class="badge badge-primary" style="font-size:0.75rem;">ar-SA Engine</span>
+          </div>
+          <p id="speechTranscriptText" class="arabic-text" style="font-size:1.4rem; color:var(--primary); margin:0; min-height:36px; line-height:1.8;">Waiting for microphone input...</p>
         </div>
       </div>
 
       <!-- AI Word-by-Word Detailed Feedback Card -->
-      <div id="feedbackCard" class="tool-card" style="padding:2rem; display:none; border:2px solid var(--primary); box-shadow:0 8px 30px rgba(0,0,0,0.08);">
+      <div id="feedbackCard" class="tool-card" style="padding:2rem; display:none; border:2px solid var(--primary); box-shadow:0 12px 35px rgba(0,0,0,0.1);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
           <div>
-            <h3 style="font-size:1.3rem; margin:0; color:var(--primary); font-weight:800;">
-              <i class="bi bi-check-circle-fill me-1"></i> Lafz-Ba-Lafz Jaiza (Word-by-Word Result)
+            <h3 style="font-size:1.35rem; margin:0; color:var(--primary); font-weight:800;">
+              <i class="bi bi-patch-check-fill me-1" style="color:var(--gold);"></i> Lafz-Ba-Lafz Jaiza (Word-by-Word Report)
             </h3>
             <span style="font-size:0.85rem; color:var(--text-muted);" id="wordsSummaryText">Sahi Alfaaz: 0 / 0</span>
           </div>
-          <span id="accuracyBadge" class="badge badge-gold" style="font-size:1.1rem; padding:0.5rem 1.25rem; font-weight:800;">Accuracy: 0%</span>
+          <span id="accuracyBadge" class="badge badge-gold" style="font-size:1.2rem; padding:0.6rem 1.5rem; font-weight:800; border-radius:9999px;">Accuracy: 0%</span>
         </div>
 
         <!-- Visual Word Badges -->
@@ -86,12 +104,21 @@ ob_start();
           <span style="font-size:0.85rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:1rem;">
             🟢 Sabz (Green) = Theek Lafz &nbsp;|&nbsp; 🔴 Surkh (Red) = Ghalat ya Chhoota hua Lafz:
           </span>
-          <div id="wordByWordContainer" class="arabic-text" style="display:flex; flex-wrap:wrap; gap:0.75rem; font-size:1.6rem; direction:rtl;"></div>
+          <div id="wordByWordContainer" class="arabic-text" style="display:flex; flex-wrap:wrap; gap:0.75rem; font-size:1.7rem; direction:rtl;"></div>
+        </div>
+
+        <!-- Google Gemini AI Tajweed Advice Box (NEW ADVANCED FEATURE) -->
+        <div id="geminiAdviceBox" style="background:linear-gradient(135deg, #ecfdf5 0%, #fef8eb 100%); border:1px solid var(--gold-border); border-radius:12px; padding:1.25rem; margin-bottom:1.5rem; display:none;">
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+            <i class="bi bi-stars" style="color:var(--gold); font-size:1.2rem;"></i>
+            <strong style="color:var(--primary); font-size:0.95rem;">Gemini AI Tajweed Advice:</strong>
+          </div>
+          <p id="geminiAdviceText" style="font-size:0.9rem; color:var(--text-main); margin:0; line-height:1.6;"></p>
         </div>
 
         <!-- Detailed Explanations Table -->
         <div style="margin-bottom:1.5rem;">
-          <h4 style="font-size:1rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">Tafseeli Report:</h4>
+          <h4 style="font-size:1rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">Lafzi Comparison:</h4>
           <div id="detailedDiffList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
         </div>
 
@@ -128,12 +155,12 @@ ob_start();
       <!-- Recitation Advice -->
       <div class="tool-card" style="padding:1.5rem;">
         <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-main); margin:0 0 1rem;">
-          <i class="bi bi-lightbulb me-1" style="color:var(--gold);"></i> Practice Guidelines
+          <i class="bi bi-lightbulb me-1" style="color:var(--gold);"></i> Tajweed Rules Guide
         </h4>
         <ul style="padding-left:1.2rem; font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin:0;">
-          <li>Listen to the reference Qari first to align with the correct pace.</li>
-          <li>Recite in a quiet room for optimal speech recognition.</li>
-          <li>Focus on clear articulation from the Arabic Makharij (exit points).</li>
+          <li><strong>Makharij (Pronunciation points):</strong> Throat letters (ح, خ, ع, غ, ء, ه) and Tongue letters.</li>
+          <li><strong>Ghunnah:</strong> 2 beats nasal sound on Noon and Meem with Shaddah (نّ, مّ).</li>
+          <li><strong>Qalqalah:</strong> Echo sound on bounce letters (ق, ط, ب, ج, د).</li>
         </ul>
       </div>
     </div>
@@ -207,13 +234,13 @@ btnRecord.addEventListener('click', function() {
 
 function stopRecordingUI() {
     isRecording = false;
-    document.getElementById('recordingStatusText').innerText = "Tap Microphone to Recite";
+    document.getElementById('recordingStatusText').innerText = "Tap Microphone to Start Recitation";
     document.getElementById('micIcon').className = 'bi bi-mic-fill';
 }
 
 function stopRecordingAndAnalyze(recitedText) {
     stopRecordingUI();
-    document.getElementById('recordingStatusText').innerText = "Analyzing recitation...";
+    document.getElementById('recordingStatusText').innerText = "Analyzing recitation with AI...";
 
     fetch(`<?= Controller::url('/api/ai-teacher/evaluate') ?>`, {
         method: 'POST',
@@ -240,16 +267,26 @@ function stopRecordingAndAnalyze(recitedText) {
 
         res.word_diffs.forEach((w, i) => {
             if (w.status === 'correct') {
-                wordsHtml += `<span style="background:#ecfdf5; color:#047857; border:2px solid #10b981; padding:0.3rem 0.8rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.35rem;" title="Sahi"><i class="bi bi-check-circle-fill" style="font-size:1rem;"></i> ${w.original}</span>`;
-                diffListHtml += `<div style="background:#f0fdf4; border-left:4px solid #10b981; padding:0.6rem 1rem; border-radius:6px; font-size:0.9rem; color:#166534; display:flex; justify-content:space-between;"><span><strong>Lafz #${i+1}:</strong> ${w.original}</span> <span><i class="bi bi-check-lg"></i> Bilkul Sahi Parha</span></div>`;
+                wordsHtml += `<span style="background:#ecfdf5; color:#047857; border:2px solid #10b981; padding:0.35rem 0.9rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.4rem;" title="Sahi"><i class="bi bi-check-circle-fill" style="font-size:1.1rem;"></i> ${w.original}</span>`;
+                diffListHtml += `<div style="background:#f0fdf4; border-left:4px solid #10b981; padding:0.75rem 1rem; border-radius:8px; font-size:0.95rem; color:#166534; display:flex; justify-content:space-between; align-items:center;"><span><strong>Lafz #${i+1}:</strong> ${w.original}</span> <span style="font-weight:700;"><i class="bi bi-check-lg"></i> Bilkul Sahi (${w.confidence}%)</span></div>`;
             } else {
-                wordsHtml += `<span style="background:#fef2f2; color:#b91c1c; border:2px solid #ef4444; padding:0.3rem 0.8rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.35rem;" title="Ghalat"><i class="bi bi-x-circle-fill" style="font-size:1rem;"></i> ${w.original}</span>`;
-                diffListHtml += `<div style="background:#fef2f2; border-left:4px solid #ef4444; padding:0.6rem 1rem; border-radius:6px; font-size:0.9rem; color:#991b1b; display:flex; justify-content:space-between;"><span><strong>Lafz #${i+1}:</strong> Asal: <strong>${w.original}</strong> | Parha: <em>${w.recited}</em></span> <span><i class="bi bi-exclamation-triangle"></i> Dobara Practice Karein</span></div>`;
+                wordsHtml += `<span style="background:#fef2f2; color:#b91c1c; border:2px solid #ef4444; padding:0.35rem 0.9rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.4rem;" title="Ghalat"><i class="bi bi-x-circle-fill" style="font-size:1.1rem;"></i> ${w.original}</span>`;
+                diffListHtml += `<div style="background:#fef2f2; border-left:4px solid #ef4444; padding:0.75rem 1rem; border-radius:8px; font-size:0.95rem; color:#991b1b; display:flex; justify-content:space-between; align-items:center;"><span><strong>Lafz #${i+1}:</strong> Asal: <strong>${w.original}</strong> | Parha: <em>${w.recited}</em></span> <span style="font-weight:700;"><i class="bi bi-arrow-repeat"></i> Dobara Practice Karein</span></div>`;
             }
         });
 
         document.getElementById('wordByWordContainer').innerHTML = wordsHtml;
         document.getElementById('detailedDiffList').innerHTML = diffListHtml;
+
+        // Gemini AI Advice Box
+        const geminiBox = document.getElementById('geminiAdviceBox');
+        if (res.ai_advice) {
+            document.getElementById('geminiAdviceText').innerText = res.ai_advice;
+            geminiBox.style.display = 'block';
+        } else {
+            geminiBox.style.display = 'none';
+        }
+
         document.getElementById('recordingStatusText').innerText = "Analysis Complete!";
         feedbackCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     })
@@ -262,7 +299,8 @@ function stopRecordingAndAnalyze(recitedText) {
 // Reference Audio Player
 document.getElementById('btnPlayReference').addEventListener('click', function() {
     const audio = document.getElementById('refAudio');
-    audio.src = `https://everyayah.com/data/Alafasy_128kbps/${currentAyahData.audioNum}`;
+    const qariUrl = document.getElementById('refQariSelect').value;
+    audio.src = `${qariUrl}${currentAyahData.audioNum}`;
     audio.play();
 });
 
