@@ -25,6 +25,35 @@
     <style>
         .arabic-text { font-family: 'Amiri', serif; direction: rtl; }
         .hero-ai-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 9999px; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold-border); color: #855d04; font-weight: 700; font-size: 0.85rem; margin-bottom: 1.25rem; }
+
+        /* Top Bar Professional Styling */
+        .top-bar {
+            background: linear-gradient(135deg, var(--primary-dark, #022c22) 0%, var(--primary, #064e3b) 100%);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.82rem;
+            padding: 0.45rem 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+        }
+        .top-bar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .top-bar-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .top-bar-links a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .top-bar-links a:hover {
+            color: var(--gold, #d4af37);
+        }
     </style>
 </head>
 <body>
