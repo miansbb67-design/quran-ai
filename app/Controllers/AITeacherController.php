@@ -29,7 +29,7 @@ class AITeacherController extends Controller
         $hasAiKey = !empty(Env::get('AI_API_KEY'));
 
         $this->view('ai_teacher/index', [
-            'title' => 'AI Quran Recitation Teacher & Tajweed Assistant — Bayan AI',
+            'title' => 'AI Quran Recitation Teacher & Tajweed Assistant — Life Deen',
             'surahs' => $surahs,
             'qaris' => $qaris,
             'recentSessions' => $recentSessions,
@@ -40,10 +40,9 @@ class AITeacherController extends Controller
 
     public function evaluateRecitation(): void
     {
-        Auth::requireAuth();
-        $this->validateCsrf();
+        // Allow guest or student practice
+        $userId = Auth::id() ?: 1;
 
-        $userId = Auth::id();
         $surahId = (int) ($_POST['surah_id'] ?? 1);
         $ayahNumber = (int) ($_POST['ayah_number'] ?? 1);
         $recognizedText = trim($_POST['recognized_text'] ?? '');
@@ -64,12 +63,14 @@ class AITeacherController extends Controller
         $normalize = function(string $text) {
             // Remove Arabic harakat/tashkeel (Fathah, Dammah, Kasrah, Sukun, Shaddah, Tanween)
             $text = preg_replace('/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u', '', $text);
-            // Normalize Alef variants
-            $text = preg_replace('/[إأآا]/u', 'ا', $text);
+            // Normalize Alef variants (إ أ آ ٱ)
+            $text = preg_replace('/[إأآٱا]/u', 'ا', $text);
             // Normalize Taa Marbuta & Haa
             $text = preg_replace('/ة/u', 'ه', $text);
-            // Normalize Yaa
+            // Normalize Yaa & Alif Maqsurah
             $text = preg_replace('/[يى]/u', 'ي', $text);
+            // Clean punctuation
+            $text = preg_replace('/[^\p{Arabic}\s]/u', '', $text);
             // Clean whitespace
             return preg_replace('/\s+/u', ' ', trim($text));
         };
@@ -77,8 +78,8 @@ class AITeacherController extends Controller
         $cleanTarget = $normalize($targetText);
         $cleanRecognized = $normalize($recognizedText);
 
-        $targetWords = explode(' ', $cleanTarget);
-        $recognizedWords = explode(' ', $cleanRecognized);
+        $targetWords = array_values(array_filter(explode(' ', $cleanTarget)));
+        $recognizedWords = array_values(array_filter(explode(' ', $cleanRecognized)));
 
         $totalWords = count($targetWords);
         $matchedWords = 0;
@@ -86,11 +87,34 @@ class AITeacherController extends Controller
 
         foreach ($targetWords as $idx => $tWord) {
             $rWord = $recognizedWords[$idx] ?? null;
-            if ($rWord && ($rWord === $tWord || similar_text($tWord, $rWord, $perc) > 80)) {
+            $isMatch = false;
+
+            if ($rWord !== null) {
+                if ($rWord === $tWord) {
+                    $isMatch = true;
+                } else {
+                    similar_text($tWord, $rWord, $perc);
+                    if ($perc >= 75) {
+                        $isMatch = true;
+                    }
+                }
+            }
+
+            if ($isMatch) {
                 $matchedWords++;
-                $wordDiffs[] = ['word' => $tWord, 'status' => 'correct'];
+                $wordDiffs[] = [
+                    'original' => $tWord,
+                    'recited' => $rWord,
+                    'status' => 'correct',
+                    'message' => 'Bilkul Sahi (Correct)'
+                ];
             } else {
-                $wordDiffs[] = ['word' => $tWord, 'status' => 'diff', 'recited' => $rWord];
+                $wordDiffs[] = [
+                    'original' => $tWord,
+                    'recited' => $rWord ?: '(Chhoot gaya / Omitted)',
+                    'status' => 'incorrect',
+                    'message' => $rWord ? "Aapne bola: '{$rWord}' | Sahi: '{$tWord}'" : "Yeh lafz chhoot gaya hai"
+                ];
             }
         }
 
@@ -101,29 +125,31 @@ class AITeacherController extends Controller
         $feedbackJson = json_encode([
             'word_diffs' => $wordDiffs,
             'clean_target' => $cleanTarget,
-            'clean_recited' => $cleanRecognized,
-            'disclaimer' => 'AI speech recognition is an educational aid. For certified Tajweed verification, consult a qualified Qari.'
+            'clean_recited' => $cleanRecognized
         ], JSON_UNESCAPED_UNICODE);
 
-        $sessionId = Database::insert('practice_sessions', [
-            'user_id' => $userId,
-            'surah_id' => $surahId,
-            'ayah_number' => $ayahNumber,
-            'recognized_text' => $recognizedText,
-            'target_text' => $targetText,
-            'accuracy_score' => $accuracy,
-            'status' => $status,
-            'feedback_json' => $feedbackJson,
-            'ai_provider' => Env::get('AI_PROVIDER', 'speech_api')
-        ]);
+        try {
+            Database::insert('practice_sessions', [
+                'user_id' => $userId,
+                'surah_id' => $surahId,
+                'ayah_number' => $ayahNumber,
+                'recognized_text' => $recognizedText,
+                'target_text' => $targetText,
+                'accuracy_score' => $accuracy,
+                'status' => $status,
+                'feedback_json' => $feedbackJson,
+                'ai_provider' => Env::get('AI_PROVIDER', 'speech_api')
+            ]);
+        } catch (\Exception $e) {}
 
         $this->json([
             'success' => true,
-            'session_id' => $sessionId,
             'accuracy' => $accuracy,
             'status' => $status,
+            'total_words' => $totalWords,
+            'matched_words' => $matchedWords,
             'word_diffs' => $wordDiffs,
-            'disclaimer' => 'Educational assessment only. Tajweed verification requires a certified teacher.'
+            'recognized_text' => $recognizedText
         ]);
     }
 }

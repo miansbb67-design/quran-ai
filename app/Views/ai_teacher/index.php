@@ -8,7 +8,7 @@ ob_start();
     <div>
       <span class="badge badge-gold" style="margin-bottom:0.5rem; display:inline-block;"><i class="bi bi-mic me-1"></i> Interactive Voice AI</span>
       <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">AI Quran Recitation Teacher</h1>
-      <p style="font-size:0.95rem; color:var(--text-muted); margin:0.35rem 0 0;">Practice Quran recitation into your microphone with instant word-by-word alignment and feedback.</p>
+      <p style="font-size:0.95rem; color:var(--text-muted); margin:0.35rem 0 0;">Recite into your microphone and get instant word-by-word correct/incorrect feedback.</p>
     </div>
     <div>
       <a href="<?= Controller::url('/quran') ?>" class="btn btn-sm btn-outline"><i class="bi bi-book me-1"></i> Open Full Quran</a>
@@ -59,7 +59,7 @@ ob_start();
             <i class="bi bi-mic-fill" id="micIcon" style="font-size:2rem; color:#000;"></i>
           </button>
           <h3 id="recordingStatusText" style="font-size:1.15rem; font-weight:700; margin:1rem 0 0.25rem; color:var(--text-main);">Tap Microphone to Recite</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Allow microphone permission when prompted by your browser.</p>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Recite clearly into your microphone in Arabic.</p>
         </div>
 
         <!-- Speech Transcript -->
@@ -69,22 +69,34 @@ ob_start();
         </div>
       </div>
 
-      <!-- AI Word-by-Word Feedback Card -->
-      <div id="feedbackCard" class="tool-card" style="padding:2rem; display:none; border:2px solid var(--primary);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h3 style="font-size:1.2rem; margin:0; color:var(--primary); font-weight:700;">
-            <i class="bi bi-check-circle-fill me-1"></i> Recitation Accuracy Report
-          </h3>
-          <span id="accuracyBadge" class="badge badge-gold" style="font-size:0.9rem; padding:0.35rem 0.85rem;">Accuracy: 0%</span>
+      <!-- AI Word-by-Word Detailed Feedback Card -->
+      <div id="feedbackCard" class="tool-card" style="padding:2rem; display:none; border:2px solid var(--primary); box-shadow:0 8px 30px rgba(0,0,0,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <h3 style="font-size:1.3rem; margin:0; color:var(--primary); font-weight:800;">
+              <i class="bi bi-check-circle-fill me-1"></i> Lafz-Ba-Lafz Jaiza (Word-by-Word Result)
+            </h3>
+            <span style="font-size:0.85rem; color:var(--text-muted);" id="wordsSummaryText">Sahi Alfaaz: 0 / 0</span>
+          </div>
+          <span id="accuracyBadge" class="badge badge-gold" style="font-size:1.1rem; padding:0.5rem 1.25rem; font-weight:800;">Accuracy: 0%</span>
         </div>
 
-        <div style="background:var(--bg-alt); padding:1.25rem; border-radius:8px; margin-bottom:1rem;">
-          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.75rem;">Word Alignment:</span>
-          <div id="wordByWordContainer" class="arabic-text" style="display:flex; flex-wrap:wrap; gap:0.5rem; font-size:1.4rem;"></div>
+        <!-- Visual Word Badges -->
+        <div style="background:var(--bg-alt); padding:1.5rem; border-radius:12px; margin-bottom:1.5rem; border:1px solid var(--border);">
+          <span style="font-size:0.85rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:1rem;">
+            🟢 Sabz (Green) = Theek Lafz &nbsp;|&nbsp; 🔴 Surkh (Red) = Ghalat ya Chhoota hua Lafz:
+          </span>
+          <div id="wordByWordContainer" class="arabic-text" style="display:flex; flex-wrap:wrap; gap:0.75rem; font-size:1.6rem; direction:rtl;"></div>
         </div>
 
-        <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">
-          <strong>Educational Safeguard:</strong> This speech analysis is an educational aid. Certified Tajweed rules require guidance from a human Quran teacher.
+        <!-- Detailed Explanations Table -->
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">Tafseeli Report:</h4>
+          <div id="detailedDiffList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+        </div>
+
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0; border-top:1px solid var(--border); padding-top:1rem;">
+          <strong>Educational Safeguard:</strong> This speech analysis is an educational recitation aid. For certified Tajweed rules (Makharij, Ghunnah), guidance under a certified Qari is recommended.
         </p>
       </div>
     </div>
@@ -221,16 +233,25 @@ function stopRecordingAndAnalyze(recitedText) {
         const badge = document.getElementById('accuracyBadge');
         badge.innerText = `Accuracy: ${res.accuracy}%`;
 
+        document.getElementById('wordsSummaryText').innerText = `Sahi Alfaaz: ${res.matched_words} / ${res.total_words} (${res.accuracy}%)`;
+
         let wordsHtml = '';
-        res.word_diffs.forEach(w => {
+        let diffListHtml = '';
+
+        res.word_diffs.forEach((w, i) => {
             if (w.status === 'correct') {
-                wordsHtml += `<span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:0.2rem 0.6rem; border-radius:6px; margin:2px;">${w.word}</span>`;
+                wordsHtml += `<span style="background:#ecfdf5; color:#047857; border:2px solid #10b981; padding:0.3rem 0.8rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.35rem;" title="Sahi"><i class="bi bi-check-circle-fill" style="font-size:1rem;"></i> ${w.original}</span>`;
+                diffListHtml += `<div style="background:#f0fdf4; border-left:4px solid #10b981; padding:0.6rem 1rem; border-radius:6px; font-size:0.9rem; color:#166534; display:flex; justify-content:space-between;"><span><strong>Lafz #${i+1}:</strong> ${w.original}</span> <span><i class="bi bi-check-lg"></i> Bilkul Sahi Parha</span></div>`;
             } else {
-                wordsHtml += `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:0.2rem 0.6rem; border-radius:6px; margin:2px;" title="Check pronunciation">${w.word}</span>`;
+                wordsHtml += `<span style="background:#fef2f2; color:#b91c1c; border:2px solid #ef4444; padding:0.3rem 0.8rem; border-radius:10px; display:inline-flex; align-items:center; gap:0.35rem;" title="Ghalat"><i class="bi bi-x-circle-fill" style="font-size:1rem;"></i> ${w.original}</span>`;
+                diffListHtml += `<div style="background:#fef2f2; border-left:4px solid #ef4444; padding:0.6rem 1rem; border-radius:6px; font-size:0.9rem; color:#991b1b; display:flex; justify-content:space-between;"><span><strong>Lafz #${i+1}:</strong> Asal: <strong>${w.original}</strong> | Parha: <em>${w.recited}</em></span> <span><i class="bi bi-exclamation-triangle"></i> Dobara Practice Karein</span></div>`;
             }
         });
+
         document.getElementById('wordByWordContainer').innerHTML = wordsHtml;
+        document.getElementById('detailedDiffList').innerHTML = diffListHtml;
         document.getElementById('recordingStatusText').innerText = "Analysis Complete!";
+        feedbackCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     })
     .catch(err => {
         console.error(err);
